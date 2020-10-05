@@ -119,7 +119,7 @@ class Creep
             next_move = @moves.shift
             # attack the fortress
             if next_move.nil?
-                fortress.health -= @damage
+                fortress.health = fortress.health - @damage < 0? 0 : fortress.health - @damage
                 @dead = true
             else
                 @next_tile_x, @next_tile_y = next_tile(next_move)
@@ -138,8 +138,6 @@ class Creep
         @image.draw(@x + TILE_OFFSET/2 - @radius/2, @y + TILE_OFFSET/2 - @radius/2, ZOrder::PLAYER, 1, 1, color)
     end
 end
-
-
 
 # Map class holds and draws tiles and gems.
 class GameMap
@@ -200,12 +198,13 @@ class Roamers < (Example rescue Gosu::Window)
         self.caption = "Roamers"
         @ground = Gosu::Image.new("media/ground.jpeg")
         @circle = Gosu::Image.new("media/circle.png")
+        @deco = Gosu::Image.new("media/fun.jpeg")
 
         # generate a random map full with obstacles 
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("Happy Place", 2, 17, 2, 2)
+        @fortress = Fortress.new("Last fortress", 2, 17, 2, 2)
         @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
         add_Hq @fortress,@game_map
         add_infected_land @infected_land,@game_map
@@ -216,6 +215,8 @@ class Roamers < (Example rescue Gosu::Window)
         @creeps = Array.new
 
         @picked_tower_type = Tower_type::Range
+        @picked_tower_level = 1
+        @picked_tower = nil
         
         start_game
       
@@ -254,7 +255,7 @@ class Roamers < (Example rescue Gosu::Window)
     def draw_game_status
         case @game_status
         when Game_status::Game_over
-            @status_font.draw("<c=00008b>GAME OVER!!!</c>", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::RED)
+            @status_font.draw("GAME OVER!!!", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
         end
     end
 
@@ -273,26 +274,68 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def draw_left_menu
-        draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color.argb(0xff_585858))
-        @group_font.draw("<b><c=00008b>STORE</c></b>", 65, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
+        @group_font.draw("<b><c=00008b>STORE</c></b>", 65, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(20, 80, Gosu::Color::BLACK, SIDE_WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+
         # draw_tower_list
+        start_at = 100
+        SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
+            tower_setting = SETTING["tower"][tower_type.to_s]
+            @image = Gosu::Image.new(tower_setting["level1"]["image"])
+            draw_button(20, start_at, 150, 30, tower_setting["name"])
+            @image.draw(120, start_at, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+            start_at += 50
+        end
+
+        @group_font.draw("<b><c=00008b>INFORMATION</c></b>", 35, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(20, 345, Gosu::Color::BLACK, SIDE_WIDTH - 20, 345, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        
+        if @picked_tower
+            draw_tower_info @picked_tower.type, @picked_tower.level
+            draw_button(10, 500, 80, 30, "Upgrade")
+            draw_button(110, 500, 80, 30, "Sell")
+        else
+            if @picked_tower_type
+                draw_tower_info @picked_tower_type, @picked_tower_level
+            end
+        end
+    end
+
+    def draw_tower_info picked_tower_type, picked_tower_level
+        setting = SETTING["tower"][picked_tower_type.to_s]
+        @info_font.draw("Tower name: #{setting["name"]}", 20, 380, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        detail_setting = setting["level#{picked_tower_level}"]
+        @info_font.draw("Range: #{detail_setting["range"]}", 20, 400, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Damage: #{detail_setting["damage"]}", 20, 420, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Profit: #{detail_setting["profit"]}", 20, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", 20, 460, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
     def draw_right_menu
-        draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color.argb(0xff_585858))
+        draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
         
-        draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 35, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Health: #{@fortress.health}</c></b>", WIDTH - SIDE_WIDTH + 50, 80, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        # draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 35, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(WIDTH - SIDE_WIDTH + 20, 80, Gosu::Color::BLACK, WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
-        draw_button (WIDTH - SIDE_WIDTH + 20), 150, 70, 30, "Start"
-        draw_button (WIDTH - SIDE_WIDTH + 110), 150, 70, 30, "Reset"
+        @info_font.draw("<b><c=00008b>Health: #{@fortress.health}</c></b>", WIDTH - SIDE_WIDTH + 50, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 140, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        
+        
+        draw_button((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, "Start")
+        draw_button((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset")
+
+        deco_width = 1.0 * (SIDE_WIDTH - @ui_offset)
+        deco_height = 1.0 * (HEIGHT - 250)
+        @deco.draw(WIDTH - SIDE_WIDTH + @ui_offset, 250, ZOrder::UI,  deco_width/@deco.width,  deco_height/@deco.height)
     end
 
-    def draw_button x, y, width, heigh, label
-        draw_rect(x, y, width, heigh, Gosu::Color::BLUE)
+    def draw_button x, y, width, height, label
+        color = Gosu::Color::GRAY
+        color = Gosu::Color::BLUE if area_clicked(x, y, x + width, y + height)
+        draw_rect(x, y, width, height, color)
         @button_font.draw("<b><c=00008b>#{label}</c></b>", x + 20, y + 10, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
@@ -407,18 +450,36 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def needs_cursor?; true; end
+ 
+    def tower_buttons_rect()
+        start_at = 100
+        SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
+            if(area_clicked(20, start_at, 170, start_at + 30))
+                @picked_tower_type = tower_type
+                @picked_tower_level = 1
+                break
+            end
+            start_at += 50
+        end
+    end
 
     def button_down(id)
 		case id
 	    when Gosu::MsLeft
             grid = grid_area_clicked
-            if !@picked_tower_type.nil? and grid
-                radius =  100.0
+            if grid
                 x, y = grid
-                if @game_map.tiles[x][y].obstacle_type == Obstacle_type::Empty
-                    @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
-                end 
+                tile = @game_map.tiles[x][y]
+                case tile.obstacle_type
+                when Obstacle_type::Empty
+                    @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y) if !@picked_tower_type.nil?
+                when Obstacle_type::Tower
+                    @picked_tower = tile
+                end
             end
+
+            # tower picking
+            tower_buttons_rect
 	    end
 	end
 end
