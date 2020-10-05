@@ -2,6 +2,8 @@ require 'rubygems'
 require 'gosu'
 require 'json'
 require './circle'
+require './find_path'
+require './enums'
 
 WIDTH, HEIGHT = 1000, 600
 SIDE_WIDTH = 200
@@ -14,53 +16,20 @@ end
 
 SETTING = load_settings
 
-module ZOrder
-    BACKGROUND,  UI , PLAYER= *0..2
-end
 
-module Obstacle_type
-    Mountain = 0
-    Tree = 1
-    House = 2
-    Tower = 3
-    HQ = 4
-end
-
-module Tower_type
-    Range = 0
-    Explosion = 1
-    Effect = 2
-end
-
-module Creep_type
-    Melee = 0
-    Siege = 1
-    Super = 2
-end
-
-module Direction
-    Up = 0
-    Down = 1
-    Left = 2
-    Right = 3
-end
-
-module Tower_status
-    Building = 0
-    Built = 1
-end
 
 class Fortress 
     attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level
-    def initialize(name, x, y)
+    def initialize(name, x, y, width, height)
         @name = name
         @x = x
         @y = y
+        @width = width
+        @height = height
         @level = 1
         setting = SETTING["level"][@level.to_s]
         @health = setting["health"]
         @money = setting["money"]
-        puts SETTING["wave"][setting["wave"]]
         @wave = SETTING["wave"][setting["wave"]]
     end
 end
@@ -71,7 +40,7 @@ class Obstacle
         @obstacle_type = obstacle_type
         @x = x
         @y = y
-        if obstacle_type != Obstacle_type::Tower
+        if obstacle_type != Obstacle_type::Tower && obstacle_type != Obstacle_type::Empty
             setting = SETTING["obstacle"][@obstacle_type.to_s]
             @image = Gosu::Image.new(setting["image"])
             @name = setting["name"]
@@ -95,49 +64,12 @@ class Tower < Obstacle
 
 end
 
-# test
-PATH = [
-    Direction::Up, 
-    Direction::Up, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right,
-    Direction::Down,
-    Direction::Down,
-    Direction::Right,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Up, 
-    Direction::Up,
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right, 
-    Direction::Right,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left,
-    Direction::Left
-
-]
 class Creep
     attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead
-    def initialize(type)
+    def initialize(type, x, y, path)
         @type = type;
-        @x = SIDE_WIDTH
-        @y = (HEIGHT/TILE_OFFSET/2) * TILE_OFFSET
+        @x = x
+        @y = y
         # load the setting
         zombie_setting =  SETTING["zombies"][type.to_s]
         @name = zombie_setting["name"]
@@ -148,9 +80,9 @@ class Creep
 
         # characteristic
         @radius = zombie_setting["radius"]
-        @image = Gosu::Image.new(Circle.new(@radius))
+        @image = Gosu::Image.new(Circle.new(@radius/2))
         @color = zombie_setting["color"]
-        @moves = PATH.dup
+        @moves = path.dup
         @next_tile_x, @next_tile_y = next_tile @moves.shift
         @dead = false
     end
@@ -183,7 +115,7 @@ class Creep
             if next_move.nil?
               @dead = true
             else
-                @next_tile_x, @next_tile_y = next_tile next_move
+                @next_tile_x, @next_tile_y = next_tile(next_move)
             end
         end
     end
@@ -196,7 +128,7 @@ class Creep
         when "yellow"
             color = Gosu::Color::YELLOW
         end
-        @image.draw(@x, @y, ZOrder::PLAYER, 0.5, 0.5, color)
+        @image.draw(@x + TILE_OFFSET/2 - @radius/2, @y + TILE_OFFSET/2 - @radius/2, ZOrder::PLAYER, 1, 1, color)
     end
 end
 
@@ -207,30 +139,40 @@ class GameMap
     attr_accessor :width, :height, :tiles, :side_width
 end
 
-def setup_game_map headquater
+def setup_game_map
     game_map = GameMap.new
     game_map.width = (WIDTH - SIDE_WIDTH * 2)/TILE_OFFSET
     game_map.height = HEIGHT/TILE_OFFSET
 
     game_map.tiles = Array.new(game_map.width) do |x|
         Array.new(game_map.height) do |y|
-            if x >= headquater.x and x < (headquater.x + 2) and y >= headquater.y and y < (headquater.y + 2)
-                Obstacle.new(Obstacle_type::HQ, x, y)
+            case rand(game_map.height)%23
+            when 0
+                Obstacle.new(Obstacle_type::Mountain, x, y)
+            when 1
+                Obstacle.new(Obstacle_type::Tree, x, y)
+            when 2
+                Obstacle.new(Obstacle_type::House, x, y)
             else
-                case rand(game_map.height)%23
-                when 0
-                    Obstacle.new(Obstacle_type::Mountain, x, y)
-                when 1
-                    Obstacle.new(Obstacle_type::Tree, x, y)
-                when 2
-                    Obstacle.new(Obstacle_type::House, x, y)
-                else
-                    nil
-                end
+                Obstacle.new(Obstacle_type::Empty, x, y)
             end
         end
       end
       game_map
+end
+
+# attacking point 
+def add_Hq(fortress, game_map)
+    for x in (fortress.x)..(fortress.x + fortress.width - 1)
+        for y in (fortress.y)..(fortress.y + fortress.height - 1)
+            game_map.tiles[x][y] = Obstacle.new(Obstacle_type::HQ, x, y)
+        end
+    end
+end
+
+# spawning point
+def add_infected_land(land, game_map)
+    game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Infected_forest, land.x, land.y)
 end
 
   # Detects if a 'mouse sensitive' area has been clicked on
@@ -249,20 +191,28 @@ class Roamers < (Example rescue Gosu::Window)
     def initialize
         super WIDTH, HEIGHT
 
-        @fortress = Fortress.new("Happy Place", 10,12)
-
         self.caption = "Roamers"
         @ground = Gosu::Image.new("media/ground.jpeg")
         @circle = Gosu::Image.new("media/circle.png")
 
-        @game_map = setup_game_map @fortress
-        
+        # generate a random map full with obstacles 
+        # and then add hq, infected land
+        @game_map = setup_game_map 
+        puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
+        @fortress = Fortress.new("Happy Place", 2, 17, 2, 2)
+        @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 17)
+        add_Hq @fortress,@game_map
+        add_infected_land @infected_land,@game_map
+
+        # get shortest path 
+        @path = shortest_path(@game_map, @infected_land, @fortress)
+
         @creeps = Array.new
 
         @picked_tower_type = Tower_type::Range
         
         @song = Gosu::Song.new("media/sound/background_normal.mp3") 
-        @song.play(true)
+        # @song.play(true)
 
     end
 
@@ -292,17 +242,17 @@ class Roamers < (Example rescue Gosu::Window)
         @item_name_font = Gosu::Font.new(15)
         @info_font = Gosu::Font.new(13)
         
-        draw_left
-        draw_right
+        draw_left_menu
+        draw_right_menu
     end
 
-    def draw_left
+    def draw_left_menu
         draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color.argb(0xff_585858))
         @group_font.draw("<b><c=00008b>STORE</c></b>", 65, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         # draw_tower_list
     end
 
-    def draw_right
+    def draw_right_menu
         draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color.argb(0xff_585858))
         
         draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
@@ -331,8 +281,8 @@ class Roamers < (Example rescue Gosu::Window)
         if !@picked_tower_type.nil? and grid
             x, y = grid
             obstacle = @game_map.tiles[x][y]
-            if obstacle 
-                draw_x x, y if obstacle.obstacle_type != Obstacle_type::Tower || obstacle.obstacle_type != Obstacle_type::HQ
+            if obstacle.obstacle_type != Obstacle_type::Empty
+                draw_x x, y if obstacle.obstacle_type != Obstacle_type::Tower and obstacle.obstacle_type != Obstacle_type::HQ
             else
                 setting = SETTING["tower"][@picked_tower_type.to_s]
                 @image = Gosu::Image.new(setting["level1"]["image"])
@@ -364,16 +314,20 @@ class Roamers < (Example rescue Gosu::Window)
         game_map.width.times do |x|
             game_map.height.times do |y|
                 tile = game_map.tiles[x][y]
-                if tile
+                if tile.obstacle_type != Obstacle_type::Empty
                     start_x = x * TILE_OFFSET + SIDE_WIDTH
                     start_y = y * TILE_OFFSET
-                    if tile.obstacle_type != Obstacle_type::HQ
-                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /tile.image.width,  (TILE_OFFSET * 1.0) /tile.image.height)
-                    else
-                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 2.0) /tile.image.width,  (TILE_OFFSET * 2.0) /tile.image.height) if !drawedHQ
+                    case tile.obstacle_type 
+                    when Obstacle_type::HQ
+                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * @fortress.width * 1.0) /tile.image.width,  (TILE_OFFSET * @fortress.height * 1.0) /tile.image.height) if !drawedHQ
                         drawedHQ = true
+                    when Obstacle_type::Tower
+                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /tile.image.width,  (TILE_OFFSET * 1.0) /tile.image.height)
+                        tile.status = Tower_status::Built 
+                    else
+                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /tile.image.width,  (TILE_OFFSET * 1.0) /tile.image.height)
                     end
-                    tile.status = Tower_status::Built if tile.obstacle_type == Obstacle_type::Tower
+                    
                 end
             end
         end
@@ -398,8 +352,10 @@ class Roamers < (Example rescue Gosu::Window)
         zombies = @fortress.wave["zombie"]
         sum = zombies.inject(0){|sum,x| sum + x["count"].to_i }
         random_no = rand(sum)
+        x = SIDE_WIDTH + @infected_land.x * TILE_OFFSET
+        y = @infected_land.y * TILE_OFFSET
         zombies.each do |zombie|
-            return Creep.new(zombie["type"]) if ((random_no -= zombie["count"]) < 0)
+            return Creep.new(zombie["type"], x, y, @path) if ((random_no -= zombie["count"]) < 0)
         end
     end
 
@@ -418,7 +374,7 @@ class Roamers < (Example rescue Gosu::Window)
             if !@picked_tower_type.nil? and grid
                 radius =  100.0
                 x, y = grid
-                @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y) if !@game_map.tiles[x][y]
+                @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y) if (@game_map.tiles[x][y] != Obstacle_type::Empty)
             end
 	    end
 	end

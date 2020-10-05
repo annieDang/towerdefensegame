@@ -15,6 +15,10 @@
     "4": {
       "name": "HQ",
       "image": "./media/obstacle/HQ.png"
+    },
+    "5": {
+      "name": "Infected land",
+      "image": "./media/obstacle/Infected_land.png"
     }
   },
   "zombies": {
