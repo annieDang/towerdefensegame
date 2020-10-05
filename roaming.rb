@@ -19,7 +19,7 @@ SETTING = load_settings
 
 
 class Fortress 
-    attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level
+    attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level, :health
     def initialize(name, x, y, width, height)
         @name = name
         @x = x
@@ -65,7 +65,7 @@ class Tower < Obstacle
 end
 
 class Creep
-    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead
+    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead, :path
     def initialize(type, x, y, path)
         @type = type;
         @x = x
@@ -82,9 +82,15 @@ class Creep
         @radius = zombie_setting["radius"]
         @image = Gosu::Image.new(Circle.new(@radius/2))
         @color = zombie_setting["color"]
-        @moves = path.dup
-        @next_tile_x, @next_tile_y = next_tile @moves.shift
+        @path = path
+        @moves = @path.dup
+        @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @dead = false
+    end
+
+    def change_path path
+        @path = path
+        @moves = @path.dup
     end
 
     def next_tile move
@@ -102,7 +108,7 @@ class Creep
         [next_tile_x, next_tile_y]
     end
 
-    def move
+    def move fortress
         return if @dead
         
         @x += (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x > @x
@@ -111,9 +117,10 @@ class Creep
         @y -= (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y < @y
         if [@x, @y] == [@next_tile_x,@next_tile_y]
             next_move = @moves.shift
-            
+            # attack the fortress
             if next_move.nil?
-              @dead = true
+                fortress.health -= @damage
+                @dead = true
             else
                 @next_tile_x, @next_tile_y = next_tile(next_move)
             end
@@ -175,8 +182,7 @@ def add_infected_land(land, game_map)
     game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Infected_forest, land.x, land.y)
 end
 
-  # Detects if a 'mouse sensitive' area has been clicked on
-  # i.e either an album or a track. returns true or false
+# Detects if a 'mouse sensitive' area has been clicked on
 
 def area_clicked(leftX, topY, rightX, bottomY)
     # complete this code
@@ -200,7 +206,7 @@ class Roamers < (Example rescue Gosu::Window)
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
         @fortress = Fortress.new("Happy Place", 2, 17, 2, 2)
-        @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 17)
+        @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
         add_Hq @fortress,@game_map
         add_infected_land @infected_land,@game_map
 
@@ -211,9 +217,18 @@ class Roamers < (Example rescue Gosu::Window)
 
         @picked_tower_type = Tower_type::Range
         
-        @song = Gosu::Song.new("media/sound/background_normal.mp3") 
-        # @song.play(true)
+        start_game
+      
+    end
 
+    def start_game
+        @start_health = @fortress.health
+
+        @song = Gosu::Song.new("media/sound/background_normal.mp3") 
+        @song.volume = 0.2
+        @song.play(true)
+
+        @game_status = Game_status::Running
     end
 
     def draw
@@ -231,6 +246,16 @@ class Roamers < (Example rescue Gosu::Window)
 
         # show tower indicator
         dragging_tower
+
+        # game status
+        draw_game_status
+    end
+
+    def draw_game_status
+        case @game_status
+        when Game_status::Game_over
+            @status_font.draw("<c=00008b>GAME OVER!!!</c>", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::RED)
+        end
     end
 
 
@@ -238,7 +263,8 @@ class Roamers < (Example rescue Gosu::Window)
         @ui_offset = 5
         
         @group_font = Gosu::Font.new(20)
-        @button_font = Gosu::Font.new(12)
+        @status_font = Gosu::Font.new(25)
+        @button_font = Gosu::Font.new(13)
         @item_name_font = Gosu::Font.new(15)
         @info_font = Gosu::Font.new(13)
         
@@ -256,9 +282,18 @@ class Roamers < (Example rescue Gosu::Window)
         draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color.argb(0xff_585858))
         
         draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 35, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("<b><c=00008b>Health: #{@fortress.health}</c></b>", WIDTH - SIDE_WIDTH + 50, 80, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        
+        draw_button (WIDTH - SIDE_WIDTH + 20), 150, 70, 30, "Start"
+        draw_button (WIDTH - SIDE_WIDTH + 110), 150, 70, 30, "Reset"
+    end
 
-        @info_font.draw("<b><c=00008b>Health:</c></b>", WIDTH - SIDE_WIDTH + 30, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Money:</c></b>", WIDTH - SIDE_WIDTH + 30, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+    def draw_button x, y, width, heigh, label
+        draw_rect(x, y, width, heigh, Gosu::Color::BLUE)
+        @button_font.draw("<b><c=00008b>#{label}</c></b>", x + 20, y + 10, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
     def grid_area_clicked
@@ -277,13 +312,11 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def dragging_tower
-        grid = grid_area_clicked()
+        grid = grid_area_clicked
         if !@picked_tower_type.nil? and grid
             x, y = grid
             obstacle = @game_map.tiles[x][y]
-            if obstacle.obstacle_type != Obstacle_type::Empty
-                draw_x x, y if obstacle.obstacle_type != Obstacle_type::Tower and obstacle.obstacle_type != Obstacle_type::HQ
-            else
+            if obstacle.obstacle_type == Obstacle_type::Empty
                 setting = SETTING["tower"][@picked_tower_type.to_s]
                 @image = Gosu::Image.new(setting["level1"]["image"])
                 start_x = x * TILE_OFFSET + SIDE_WIDTH
@@ -291,6 +324,8 @@ class Roamers < (Example rescue Gosu::Window)
                 @image.draw(start_x, start_y, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
                 radius =  setting["level1"]["range"].to_f
                 @circle.draw(start_x + TILE_OFFSET/2- radius/2, start_y + TILE_OFFSET/2 - radius/2, ZOrder::UI,  radius/@circle.width,  radius/@circle.width)
+            else
+                draw_x x, y if obstacle.obstacle_type != Obstacle_type::Tower and obstacle.obstacle_type != Obstacle_type::HQ
             end
         end
     end
@@ -360,9 +395,15 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def update
-        @creeps.each { |creep| creep.move }
-        @creeps.reject! {|creep| creep.dead }
-        @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000 )
+        return if @game_status == Game_status::Game_over
+
+        if @fortress.health > 0 
+            @creeps.each { |creep| creep.move @fortress}
+            @creeps.reject! {|creep| creep.dead }
+            @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
+        else
+            @game_status = Game_status::Game_over
+        end
     end
 
     def needs_cursor?; true; end
@@ -370,11 +411,13 @@ class Roamers < (Example rescue Gosu::Window)
     def button_down(id)
 		case id
 	    when Gosu::MsLeft
-            grid = grid_area_clicked()
+            grid = grid_area_clicked
             if !@picked_tower_type.nil? and grid
                 radius =  100.0
                 x, y = grid
-                @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y) if (@game_map.tiles[x][y] != Obstacle_type::Empty)
+                if @game_map.tiles[x][y].obstacle_type == Obstacle_type::Empty
+                    @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
+                end 
             end
 	    end
 	end

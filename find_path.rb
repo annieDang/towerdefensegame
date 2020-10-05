@@ -36,8 +36,6 @@ def find_path parents, enter, destination
     path = Array.new
     x, y = destination
     while !(x == enter.x and y == enter.y) do
-        puts "__________"
-        puts "x =#{x} y = #{y}"
         next_x = parents[x][y].x
         next_y = parents[x][y].y
         path << Direction::Up if(next_y - 1 == y)
@@ -64,7 +62,6 @@ def shortest_path game_map, enter, destination
             current_tile = queue.shift
             if (current_tile.x == (destination.x + destination.width) )  && (current_tile.y == (destination.y + destination.height))
                 puts "hit it"
-                puts "#{current_tile.x}, #{current_tile.y}"
                 found = true;
                 break
             end
@@ -73,7 +70,6 @@ def shortest_path game_map, enter, destination
                 queue.push(game_map.tiles[current_tile.x][up])
                 parents[current_tile.x][up] = current_tile
                 visited[current_tile.x][up] = true;
-                puts "#{current_tile.x}, #{up}"
             end
 
             down = current_tile.y + 1
@@ -81,7 +77,6 @@ def shortest_path game_map, enter, destination
                 queue.push(game_map.tiles[current_tile.x][down])
                 parents[current_tile.x][down] = current_tile
                 visited[current_tile.x][down] = true;
-                puts "#{current_tile.x}, #{down}"
             end
 
             left = current_tile.x - 1
@@ -89,7 +84,6 @@ def shortest_path game_map, enter, destination
                 queue.push(game_map.tiles[left][current_tile.y])
                 parents[left][current_tile.y] = current_tile
                 visited[left][current_tile.y] = true;
-                puts "#{left}, #{current_tile.y}"
             end
 
             right = current_tile.x + 1
@@ -97,7 +91,6 @@ def shortest_path game_map, enter, destination
                 queue.push(game_map.tiles[right][current_tile.y])
                 parents[right][current_tile.y] = current_tile
                 visited[right][current_tile.y] = true;
-                puts "#{right}, #{current_tile.y}"
             end
         end
     end
