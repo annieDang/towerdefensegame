@@ -95,6 +95,9 @@ class Roamers < (Example rescue Gosu::Window)
         @picked_tower = nil
         
         start_game
+
+        @notification = nil
+        @notification_start_time = Gosu.milliseconds
       
     end
 
@@ -106,6 +109,11 @@ class Roamers < (Example rescue Gosu::Window)
         # @song.play(true)
 
         @game_status = Game_status::Running
+    end
+
+    def make_notification info
+        @notification = info
+        @notification_start_time = Gosu.milliseconds
     end
 
     def draw
@@ -133,7 +141,15 @@ class Roamers < (Example rescue Gosu::Window)
         when Game_status::Game_over
             draw_rect(WIDTH/2 - 100, HEIGHT/2 - 20, 250, 50, Gosu::Color::GRAY)
             @status_font.draw("GAME OVER!!!", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+        when Game_status::Pause
+            draw_rect(WIDTH/2 - 100, HEIGHT/2 - 20, 250, 50, Gosu::Color::GRAY)
+            @status_font.draw("PAUSED", WIDTH/2 - 10, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
         end
+
+        if @notification
+            @status_font.draw(@notification, WIDTH/2 - 100,  HEIGHT/2 - 5, ZOrder::BACKGROUND, 1.0, 1.0, Gosu::Color::RED)
+        end
+
     end
 
 
@@ -200,8 +216,11 @@ class Roamers < (Example rescue Gosu::Window)
         @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 140, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         
-        
-        draw_button((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, "Start")
+        start_lable = "Pause"
+        if @game_status == Game_status::Pause
+            start_lable = "Start"
+        end
+        draw_button((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, start_lable)
         draw_button((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset")
 
         deco_width = 1.0 * (SIDE_WIDTH - @ui_offset)
@@ -314,15 +333,22 @@ class Roamers < (Example rescue Gosu::Window)
 
     def update
         return if @game_status == Game_status::Game_over
-
-        if @fortress.health > 0 
+        
+        if @fortress.health < 0
+            @game_status = Game_status::Game_over
+            return 
+        end
+        
+        if @game_status == Game_status::Running
             @creeps.each { |creep| creep.move @fortress}
             @creeps.reject! {|creep| creep.dead }
             if(@creeps.length < @fortress.number_of_creeps)
                 @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
             end
-        else
-            @game_status = Game_status::Game_over
+        end
+
+        if (Gosu.milliseconds - @notification_start_time) > 1000
+            @notification = nil
         end
     end
 
@@ -360,6 +386,17 @@ class Roamers < (Example rescue Gosu::Window)
         end
     end
 
+    def start_pause
+        if area_clicked((WIDTH - SIDE_WIDTH + 20), 180, WIDTH - SIDE_WIDTH + 20 + 180, 180 + 30)
+            case @game_status
+            when Game_status::Pause
+                @game_status = Game_status::Running
+            when Game_status::Running
+                @game_status = Game_status::Pause
+            end
+        end
+    end 
+
     def button_down(id)
 		case id
 	    when Gosu::MsLeft
@@ -369,10 +406,18 @@ class Roamers < (Example rescue Gosu::Window)
                 tile = @game_map.tiles[x][y]
                 case tile.obstacle_type
                 when Obstacle_type::Empty
-                    if !@picked_tower_type.nil?
-                        @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
-                        @creeps.each { |creep| creep.change_tile(@game_map.tiles[x][y], @game_map, @fortress) }
-                        @path = shortest_path(@game_map, @infected_land, @fortress)
+                    if !@picked_tower_type.nil? 
+                        tower_setting = SETTING["tower"][@picked_tower_type.to_s]
+                        tower_price = tower_setting["level1"]["price"].to_i
+                        puts tower_price
+                        if (tower_price < @fortress.money)
+                            @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
+                            @fortress.money -= tower_price
+                            @creeps.each { |creep| creep.change_tile(@game_map.tiles[x][y], @game_map, @fortress) }
+                            @path = shortest_path(@game_map, @infected_land, @fortress)
+                        else
+                            make_notification("Not enough money!")
+                        end
                     end
                 when Obstacle_type::Tower
                     @picked_tower = tile
@@ -382,7 +427,11 @@ class Roamers < (Example rescue Gosu::Window)
             # tower picking
             tower_buttons_rect
 
+            #reset
             reset
+
+            # start_pause
+            start_pause
 	    end
 	end
 end
