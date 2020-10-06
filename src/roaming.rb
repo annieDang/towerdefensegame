@@ -103,7 +103,7 @@ class Roamers < (Example rescue Gosu::Window)
 
         @song = Gosu::Song.new("media/sound/background_normal.mp3") 
         @song.volume = 0.2
-        @song.play(true)
+        # @song.play(true)
 
         @game_status = Game_status::Running
     end
@@ -306,10 +306,8 @@ class Roamers < (Example rescue Gosu::Window)
         zombies = @fortress.wave["zombie"]
         sum = zombies.inject(0){|sum,x| sum + x["count"].to_i }
         random_no = rand(sum)
-        x = SIDE_WIDTH + @infected_land.x * TILE_OFFSET
-        y = @infected_land.y * TILE_OFFSET
         zombies.each do |zombie|
-            return Creep.new(zombie["type"], x, y, @path) if ((random_no -= zombie["count"]) < 0)
+            return Creep.new(zombie["type"], @infected_land.x, @infected_land.y, @game_map, @path) if ((random_no -= zombie["count"]) < 0)
         end
     end
 
@@ -319,7 +317,9 @@ class Roamers < (Example rescue Gosu::Window)
         if @fortress.health > 0 
             @creeps.each { |creep| creep.move @fortress}
             @creeps.reject! {|creep| creep.dead }
-            @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
+            if(@creeps.length < 10)
+                @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
+            end
         else
             @game_status = Game_status::Game_over
         end
@@ -339,6 +339,20 @@ class Roamers < (Example rescue Gosu::Window)
         end
     end
 
+    def reset
+        if area_clicked((WIDTH - SIDE_WIDTH + 110), 180, WIDTH - SIDE_WIDTH + 110 + 70, 180 + 30)
+            @creeps =[]
+            @game_map.width.times do |x|
+                @game_map.height.times do |y|
+                    tile = @game_map.tiles[x][y]
+                    if tile.obstacle_type == Obstacle_type::Tower
+                        @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
+                    end
+                end
+            end 
+        end
+    end
+
     def button_down(id)
 		case id
 	    when Gosu::MsLeft
@@ -348,7 +362,11 @@ class Roamers < (Example rescue Gosu::Window)
                 tile = @game_map.tiles[x][y]
                 case tile.obstacle_type
                 when Obstacle_type::Empty
-                    @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y) if !@picked_tower_type.nil?
+                    if !@picked_tower_type.nil?
+                        @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
+                        @creeps.each { |creep| creep.change_tile(@game_map.tiles[x][y], @game_map, @fortress) }
+                        @path = shortest_path(@game_map, @infected_land, @fortress)
+                    end
                 when Obstacle_type::Tower
                     @picked_tower = tile
                 end
@@ -356,6 +374,8 @@ class Roamers < (Example rescue Gosu::Window)
 
             # tower picking
             tower_buttons_rect
+
+            reset
 	    end
 	end
 end
