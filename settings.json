@@ -131,7 +131,7 @@
     "lv1": {
       "zombie": [
         {
-          "type": "2",
+          "type": "0",
           "count": 70
         },
         {
@@ -147,9 +147,10 @@
   },
   "level": {
     "1": {
-      "health": 1,
+      "health": 100,
       "money": 500,
       "wave": "lv1",
+      "number_of_creeps": 10,
       "towers": ["0", "1", "2"]
     }
   }

@@ -1,5 +1,5 @@
 class Fortress 
-    attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level, :health
+    attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level, :health, :number_of_creeps
     def initialize(name, x, y, width, height)
         @name = name
         @x = x
@@ -15,5 +15,6 @@ class Fortress
         @health = setting["health"]
         @money = setting["money"]
         @wave = SETTING["wave"][setting["wave"]]
+        @number_of_creeps = setting["number_of_creeps"]
     end
 end

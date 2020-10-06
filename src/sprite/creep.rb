@@ -21,28 +21,10 @@ class Creep
         
         @path = path
         @moves = @path.dup
-        # orginal
-        @steps = cal_steps
         
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @back_to_last_move = @path[0]
         @dead = false
-    end
-
-    def cal_steps
-        steps = Array[]
-        x = @grid_x
-        y = @grid_y
-        moves = @path.dup
-        next_move = moves.shift
-
-        steps << [x, y]
-        while !next_move.nil? do
-            x,y = cal_grid(next_move, x, y)
-            steps << [x, y]
-            next_move = moves.shift
-        end
-        steps
     end
 
     def cal_pos
@@ -71,10 +53,26 @@ class Creep
         [x,y]
     end
 
-    def cal_step x, y
+    def cal_all_steps
+        steps = Array[]
+        x = @grid_x
+        y = @grid_y
+        moves = @path.dup
+        next_move = moves.shift
+
+        steps << [x, y]
+        while !next_move.nil? do
+            x,y = cal_grid(next_move, x, y)
+            steps << [x, y]
+            next_move = moves.shift
+        end
+        steps
+    end
+
+    def cal_step x, y, steps
         current_step = -1
         start = 0
-        @steps.each do |step|
+        steps.each do |step|
             if (step[0] == x and step[1] == y)
                 current_step = start
                 break
@@ -86,8 +84,9 @@ class Creep
 
     # add/remove
     def change_tile tile, game_map, fortress
-        affected_step = cal_step(tile.x, tile.y)
-        creep_current_step = cal_step(@grid_x, @grid_y)
+        steps_to_hq = cal_all_steps
+        affected_step = cal_step(tile.x, tile.y, steps_to_hq)
+        creep_current_step = cal_step(@grid_x, @grid_y, steps_to_hq)
     
         # remove
         if affected_step > creep_current_step
@@ -105,7 +104,6 @@ class Creep
     def change_path path
         @path = path
         @moves = @path.dup
-        @steps = cal_steps
     end
 
     def next_tile move

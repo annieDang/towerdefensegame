@@ -318,7 +318,7 @@ class Roamers < (Example rescue Gosu::Window)
         if @fortress.health > 0 
             @creeps.each { |creep| creep.move @fortress}
             @creeps.reject! {|creep| creep.dead }
-            if(@creeps.length < 10)
+            if(@creeps.length < @fortress.number_of_creeps)
                 @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
             end
         else
