@@ -80,7 +80,7 @@ class Roamers < (Example rescue Gosu::Window)
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("LAST FORTRESS", 2, 17, 2, 2)
+        @fortress = Fortress.new("LAST FORTRESS", 2, 17, Obstacle_type::HQ, 2, 2)
         @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
         add_Hq @fortress,@game_map
         add_infected_land @infected_land,@game_map
@@ -109,7 +109,7 @@ class Roamers < (Example rescue Gosu::Window)
 
         @song = Gosu::Song.new("media/sound/background_normal.mp3") 
         @song.volume = 0.2
-        # @song.play(true)
+        @song.play(true)
 
         @game_status = Game_status::Running
     end
@@ -124,7 +124,7 @@ class Roamers < (Example rescue Gosu::Window)
         @ground.draw(0, 0, ZOrder::BACKGROUND, (WIDTH * 1.0) /@ground.width,  (HEIGHT * 1.0) /@ground.height)
         
         # draw obstacles (tree, mountains, houses), fortress and infected area
-        draw_game_map(@game_map)
+        draw_game_map
         
         # draw creeps
         @creeps.each { |creep| creep.spawn }
@@ -134,6 +134,9 @@ class Roamers < (Example rescue Gosu::Window)
 
         # show tower indicator
         dragging_tower
+
+        # show collision
+        collision
 
         # game status
         draw_game_status
@@ -283,45 +286,56 @@ class Roamers < (Example rescue Gosu::Window)
         draw_quad(leftX + TILE_OFFSET - thickness/2, topY, color, leftX + TILE_OFFSET + thickness/2, topY, color, rightX - TILE_OFFSET - thickness/2, bottomY, color, rightX - TILE_OFFSET + thickness/2, bottomY, color)
     end
 
-    def draw_game_map(game_map)
-        draw_grid(game_map)
+    def draw_game_map
+        draw_grid
         # Very primitive drawing function:
         # Draws all the tiles, some off-screen, some on-screen.
         drawedHQ = false
-        game_map.width.times do |x|
-            game_map.height.times do |y|
-                tile = game_map.tiles[x][y]
+        @game_map.width.times do |x|
+            @game_map.height.times do |y|
+                tile = @game_map.tiles[x][y]
                 if tile.obstacle_type != Obstacle_type::Empty
-                    start_x = x * TILE_OFFSET + SIDE_WIDTH
-                    start_y = y * TILE_OFFSET
-                    case tile.obstacle_type 
-                    when Obstacle_type::HQ
-                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * @fortress.width * 1.0) /tile.image.width,  (TILE_OFFSET * @fortress.height * 1.0) /tile.image.height) if !drawedHQ
+                    next if (tile.obstacle_type == Obstacle_type::HQ and drawedHQ)
+                    
+                    if tile.obstacle_type == Obstacle_type::HQ
+                        @fortress.draw
                         drawedHQ = true
-                    when Obstacle_type::Tower
-                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /tile.image.width,  (TILE_OFFSET * 1.0) /tile.image.height)
-                        tile.status = Tower_status::Built 
-                    else
-                        tile.image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /tile.image.width,  (TILE_OFFSET * 1.0) /tile.image.height)
+                        next
                     end
                     
+                    tile.draw
                 end
             end
         end
     end
 
-    def draw_grid(game_map)
+    def draw_grid
         color = Gosu::Color.argb(0xff_808080)
-        for x in 0..game_map.width do
+        for x in 0..@game_map.width do
             draw_line(x * TILE_OFFSET + SIDE_WIDTH, 0 , color,  x * TILE_OFFSET + SIDE_WIDTH, HEIGHT, color, ZOrder::BACKGROUND, mode=:default)
         end
         
-        for y in 0..game_map.height do
+        for y in 0..@game_map.height do
             draw_line(SIDE_WIDTH, y * TILE_OFFSET, color,  WIDTH - SIDE_WIDTH, y * TILE_OFFSET, color, ZOrder::BACKGROUND, mode=:default)
         end
     end
 
     def collision
+        @game_map.width.times do |x|
+            @game_map.height.times do |y|
+                tile = @game_map.tiles[x][y]
+                next if tile.obstacle_type != Obstacle_type::Tower
+                
+                @creeps.each do |creep|
+                    if tile.collision?(creep)
+                        tower_x = tile.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
+                        tower_y = tile.y * TILE_OFFSET + TILE_OFFSET/2
+                        draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
+                        creep.health -= tile.damage
+                    end
+                end
+            end
+        end
     end
 
     def sprawn_creep
@@ -343,8 +357,16 @@ class Roamers < (Example rescue Gosu::Window)
         end
         
         if @game_status == Game_status::Running
+            # move them
             @creeps.each { |creep| creep.move @fortress}
+            
+            # kill the died
+            @creeps.each { |creep| @fortress.money += creep.profit if creep.health <0}
+            @creeps.each { |creep| creep.dead = true if creep.health <0}
+
+            # remove the died 
             @creeps.reject! {|creep| creep.dead }
+            
             if(@creeps.length < @fortress.number_of_creeps)
                 @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
             end
@@ -416,8 +438,7 @@ class Roamers < (Example rescue Gosu::Window)
                         if (tower_price < @fortress.money)
                             @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
                             @fortress.money -= tower_price
-                            @creeps.each { |creep| creep.update_game_map(@game_map.tiles[x][y], @game_map, @fortress) }
-                            @path = shortest_path(@infected_land, @fortress)
+                            @creeps.each { |creep| creep.update_game_map(@game_map) }
                         else
                             make_notification("Not enough money!")
                         end

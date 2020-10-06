@@ -22,6 +22,7 @@ class Creep
         @path = path
         @mapping_map = mapping_map
         @moves = @path.dup
+        @game_map = nil
         
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @back_to_last_move = @path[0]
@@ -55,48 +56,6 @@ class Creep
         [x,y]
     end
 
-    # is location one step in the move?
-    def cal_step loc_x, loc_y
-        length = -1
-        x = @grid_x
-        y = @grid_y
-        remain_step = @moves.dup
-        puts "tile_loc #{loc_x},#{loc_y}"
-        puts "path length : #{@path.length}"
-        puts "remain_step_lenght : #{remain_step.length}"
-        next_move = remain_step.shift
-        while !next_move.nil? do
-            return length if(loc_x ==x and loc_y == y)
-               
-            x, y = cal_grid(next_move, x, y)
-            next_move = remain_step.shift
-            length +=1
-        end
-        length
-    end
-
-    # when game_map gets updated 
-    def update_game_map tile, new_game_map, fortress
-        location_tile = cal_step(tile.x, tile.y)
-        
-        puts "location_tile : #{location_tile}"
-        # found it
-        if location_tile > -1
-            creep_tile = new_game_map.tiles[grid_x][grid_y]
-            if location_tile <= 1
-                last_move_x, last_move_y = cal_last_grid()
-                creep_tile = new_game_map.tiles[last_move_x][last_move_y]
-            end
-                
-            new_path = shortest_path(creep_tile, fortress)
-            change_path(new_path)
-        end
-    end
-
-    def change_path new_path
-        @moves = new_path.dup
-    end
-
     def next_tile move
         next_tile_x, next_tile_y  = [@x, @y]
         case move
@@ -119,6 +78,9 @@ class Creep
 
     def move fortress
         return if @dead
+        # if @game_map
+        #     return if @game_map.tiles[@grid_x][@grid_y].obstacle_type == Obstacle_type::Tower
+        # end
         @x += (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x > @x
         @x -= (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x < @x
         @y += (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y > @y
@@ -133,6 +95,10 @@ class Creep
                 @next_tile_x, @next_tile_y = next_tile(next_move)
             end
         end
+    end
+
+    def update_game_map new_game_map
+        @game_map = new_game_map
     end
 
     def spawn

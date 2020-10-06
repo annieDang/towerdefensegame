@@ -10,4 +10,10 @@ class Obstacle
             @name = setting["name"]
         end
     end
+
+    def draw 
+        start_x = @x * TILE_OFFSET + SIDE_WIDTH
+        start_y = @y * TILE_OFFSET
+        @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+    end
 end

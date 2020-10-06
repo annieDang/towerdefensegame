@@ -27,7 +27,7 @@
       "damage": 3,
       "speed": 3,
       "profit": 4,
-      "health": 300,
+      "health": 50,
       "radius": 10,
       "color": "black"
     },
@@ -36,7 +36,7 @@
       "damage": 3,
       "speed": 5,
       "profit": 4,
-      "health": 300,
+      "health": 80,
       "radius": 12,
       "color": "gray"
     },
@@ -45,7 +45,7 @@
       "damage": 3,
       "speed": 6,
       "profit": 4,
-      "health": 300,
+      "health": 500,
       "radius": 14,
       "color": "yellow"
     }
@@ -81,21 +81,24 @@
     "1": {
       "name": "Cannon",
       "level1": {
-        "damage": 3,
+        "damage": 20,
+        "range": 50,
         "cool_down": 3,
         "profit": 4,
         "price": 300,
         "image": "./media/tower/Cannon1.png"
       },
       "level2": {
-        "damage": 3,
+        "damage": 22,
+        "range": 50,
         "cool_down": 3,
         "profit": 4,
         "price": 300,
         "image": "./media/tower/Cannon10.png"
       },
       "level3": {
-        "damage": 3,
+        "damage": 22,
+        "range": 50,
         "cool_down": 3,
         "profit": 4,
         "health": 300,
@@ -106,6 +109,7 @@
       "name": "Effect",
       "level1": {
         "damage": 3,
+        "range": 80,
         "cool_down": 3,
         "profit": 4,
         "health": 300,
@@ -113,6 +117,7 @@
       },
       "level2": {
         "damage": 3,
+        "range": 80,
         "cool_down": 3,
         "profit": 4,
         "price": 300,
@@ -120,6 +125,7 @@
       },
       "level3": {
         "damage": 3,
+        "range": 80,
         "cool_down": 3,
         "profit": 4,
         "price": 300,
@@ -132,15 +138,15 @@
       "zombie": [
         {
           "type": "0",
-          "count": 70
+          "count": 50
         },
         {
           "type": "1",
-          "count": 20
+          "count": 30
         },
         {
           "type": "2",
-          "count": 10
+          "count": 20
         }
       ]
     }
@@ -148,9 +154,9 @@
   "level": {
     "1": {
       "health": 100,
-      "money": 15000000000,
+      "money": 1500,
       "wave": "lv1",
-      "number_of_creeps": 1,
+      "number_of_creeps": 5,
       "towers": ["0", "1", "2"]
     }
   }
