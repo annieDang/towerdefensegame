@@ -14,7 +14,7 @@ def initializeVisitsAndParents width, height
     [visited, parents]
 end
 
-# Pseudocode
+# Pseudocode (from wiki)
 # procedure BFS(G, root) is
 #     let Q be a queue
 #     label root as discovered

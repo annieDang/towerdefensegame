@@ -25,7 +25,7 @@
     "0": {
       "name": "Melee",
       "damage": 3,
-      "speed": 1,
+      "speed": 3,
       "profit": 4,
       "health": 300,
       "radius": 10,
@@ -34,7 +34,7 @@
     "1": {
       "name": "Siege",
       "damage": 3,
-      "speed": 3,
+      "speed": 5,
       "profit": 4,
       "health": 300,
       "radius": 12,
@@ -43,7 +43,7 @@
     "2": {
       "name": "Super",
       "damage": 3,
-      "speed": 3,
+      "speed": 6,
       "profit": 4,
       "health": 300,
       "radius": 14,
@@ -148,7 +148,7 @@
   "level": {
     "1": {
       "health": 100,
-      "money": 500,
+      "money": 1500,
       "wave": "lv1",
       "number_of_creeps": 5,
       "towers": ["0", "1", "2"]
