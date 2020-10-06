@@ -85,8 +85,11 @@ class Roamers < (Example rescue Gosu::Window)
         add_Hq @fortress,@game_map
         add_infected_land @infected_land,@game_map
 
+        # cache
+        @mapping_map = generate_mapping(@game_map, @infected_land, @fortress)
+        
         # get shortest path 
-        @path = shortest_path(@game_map, @infected_land, @fortress)
+        @path = shortest_path(@infected_land, @fortress)
 
         @creeps = Array.new
 
@@ -327,7 +330,7 @@ class Roamers < (Example rescue Gosu::Window)
         sum = zombies.inject(0){|sum,x| sum + x["count"].to_i }
         random_no = rand(sum)
         zombies.each do |zombie|
-            return Creep.new(zombie["type"], @infected_land.x, @infected_land.y, @game_map, @path) if ((random_no -= zombie["count"]) < 0)
+            return Creep.new(zombie["type"], @infected_land.x, @infected_land.y, @game_map, @path, @mapping_map) if ((random_no -= zombie["count"]) < 0)
         end
     end
 
@@ -414,7 +417,7 @@ class Roamers < (Example rescue Gosu::Window)
                             @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
                             @fortress.money -= tower_price
                             @creeps.each { |creep| creep.change_tile(@game_map.tiles[x][y], @game_map, @fortress) }
-                            @path = shortest_path(@game_map, @infected_land, @fortress)
+                            @path = shortest_path(@infected_land, @fortress)
                         else
                             make_notification("Not enough money!")
                         end

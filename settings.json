@@ -148,7 +148,7 @@
   "level": {
     "1": {
       "health": 100,
-      "money": 1500,
+      "money": 15000000000,
       "wave": "lv1",
       "number_of_creeps": 5,
       "towers": ["0", "1", "2"]

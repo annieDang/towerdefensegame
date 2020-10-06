@@ -48,7 +48,8 @@ def find_path parents, enter, destination
     path
 end
 
-def shortest_path game_map, enter, destination
+def generate_mapping game_map, enter, destination
+    puts "cccn"
     visited, parents = initializeVisitsAndParents(game_map.width, game_map.height)
     queue = Queue.new
     queue.push(enter)
@@ -94,11 +95,16 @@ def shortest_path game_map, enter, destination
             end
         end
     end
+    parents
+end
 
+def shortest_path enter, destination
+    
+    puts "length mapping: #{@mapping_map.length}"
     all_paths = Array.new
     for x in (destination.x)..(destination.x + destination.width - 1)
         for y in (destination.y)..(destination.y + destination.height - 1)
-            all_paths << find_path(parents, enter, [x,y])
+            all_paths << find_path(@mapping_map, enter, [x,y])
         end
     end 
     
@@ -114,5 +120,5 @@ def shortest_path game_map, enter, destination
     
     puts "path length :#{path.length}"
     puts "path :#{path}"
-    path.reverse
+    path.reverse 
 end

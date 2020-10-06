@@ -1,6 +1,6 @@
 class Creep
-    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead, :path, :grid_x, :grid_y
-    def initialize(type, grid_x, grid_y, game_map, path)
+    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead, :path, :grid_x, :grid_y, :mapping_map
+    def initialize(type, grid_x, grid_y, game_map, path, mapping_map)
         @type = type;
         @grid_x = grid_x
         @grid_y = grid_y
@@ -20,6 +20,7 @@ class Creep
         @color = zombie_setting["color"]
         
         @path = path
+        @mapping_map = mapping_map
         @moves = @path.dup
         
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
@@ -96,7 +97,7 @@ class Creep
                 creep_tile = game_map.tiles[last_move_x][last_move_y]
             end
                 
-            new_path = shortest_path(game_map, creep_tile, fortress)
+            new_path = shortest_path(creep_tile, fortress)
             change_path(new_path)
         end
     end
