@@ -131,6 +131,7 @@ class Roamers < (Example rescue Gosu::Window)
     def draw_game_status
         case @game_status
         when Game_status::Game_over
+            draw_rect(WIDTH/2 - 100, HEIGHT/2 - 20, 250, 50, Gosu::Color::GRAY)
             @status_font.draw("GAME OVER!!!", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
         end
     end
@@ -350,6 +351,12 @@ class Roamers < (Example rescue Gosu::Window)
                     end
                 end
             end 
+
+            # reset player's data
+            @fortress.load_setting
+
+            # reset game status
+            start_game
         end
     end
 

@@ -6,6 +6,10 @@ class Fortress
         @y = y
         @width = width
         @height = height
+        load_setting 
+    end
+
+    def load_setting
         @level = 1
         setting = SETTING["level"][@level.to_s]
         @health = setting["health"]

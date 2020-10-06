@@ -147,7 +147,7 @@
   },
   "level": {
     "1": {
-      "health": 100,
+      "health": 1,
       "money": 500,
       "wave": "lv1",
       "towers": ["0", "1", "2"]
