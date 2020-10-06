@@ -49,7 +49,7 @@ def find_path parents, enter, destination
 end
 
 def generate_mapping game_map, enter, destination
-    puts "cccn"
+    puts "calculating the map from enter to destination ..."
     visited, parents = initializeVisitsAndParents(game_map.width, game_map.height)
     queue = Queue.new
     queue.push(enter)
@@ -99,8 +99,6 @@ def generate_mapping game_map, enter, destination
 end
 
 def shortest_path enter, destination
-    
-    puts "length mapping: #{@mapping_map.length}"
     all_paths = Array.new
     for x in (destination.x)..(destination.x + destination.width - 1)
         for y in (destination.y)..(destination.y + destination.height - 1)
@@ -116,9 +114,9 @@ def shortest_path enter, destination
     end
 
     path = all_paths[shortest_path_indx]
-    # path = find_path(parents, enter, [destination.x,destination.y])
-    
+    path = path.reverse 
+
     puts "path length :#{path.length}"
     puts "path :#{path}"
-    path.reverse 
+    path 
 end

@@ -1,6 +1,6 @@
 class Creep
     attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead, :path, :grid_x, :grid_y, :mapping_map
-    def initialize(type, grid_x, grid_y, game_map, path, mapping_map)
+    def initialize(type, grid_x, grid_y, path, mapping_map)
         @type = type;
         @grid_x = grid_x
         @grid_y = grid_y
@@ -26,6 +26,7 @@ class Creep
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @back_to_last_move = @path[0]
         @dead = false
+
     end
 
     def cal_pos
@@ -54,47 +55,37 @@ class Creep
         [x,y]
     end
 
-    def cal_all_steps
-        steps = Array[]
+    # is location one step in the move?
+    def cal_step loc_x, loc_y
+        length = -1
         x = @grid_x
         y = @grid_y
-        moves = @path.dup
-        next_move = moves.shift
-
-        steps << [x, y]
+        remain_step = @moves.dup
+        puts "tile_loc #{loc_x},#{loc_y}"
+        puts "path length : #{@path.length}"
+        puts "remain_step_lenght : #{remain_step.length}"
+        next_move = remain_step.shift
         while !next_move.nil? do
-            x,y = cal_grid(next_move, x, y)
-            steps << [x, y]
-            next_move = moves.shift
+            return length if(loc_x ==x and loc_y == y)
+               
+            x, y = cal_grid(next_move, x, y)
+            next_move = remain_step.shift
+            length +=1
         end
-        steps
+        length
     end
 
-    def cal_step x, y, steps
-        current_step = -1
-        start = 0
-        steps.each do |step|
-            if (step[0] == x and step[1] == y)
-                current_step = start
-                break
-            end
-            start += 1
-        end
-        current_step
-    end
-
-    # add/remove
-    def change_tile tile, game_map, fortress
-        steps_to_hq = cal_all_steps
-        affected_step = cal_step(tile.x, tile.y, steps_to_hq)
-        creep_current_step = cal_step(@grid_x, @grid_y, steps_to_hq)
-    
-        # remove
-        if affected_step > creep_current_step
-            creep_tile = game_map.tiles[grid_x][grid_y]
-            if affected_step - creep_current_step == 0
+    # when game_map gets updated 
+    def update_game_map tile, new_game_map, fortress
+        location_tile = cal_step(tile.x, tile.y)
+        
+        puts "location_tile : #{location_tile}"
+        # found it
+        if location_tile > -1
+            creep_tile = new_game_map.tiles[grid_x][grid_y]
+            if location_tile <= 1
                 last_move_x, last_move_y = cal_last_grid()
-                creep_tile = game_map.tiles[last_move_x][last_move_y]
+                creep_tile = new_game_map.tiles[last_move_x][last_move_y]
             end
                 
             new_path = shortest_path(creep_tile, fortress)
@@ -102,9 +93,8 @@ class Creep
         end
     end
 
-    def change_path path
-        @path = path
-        @moves = @path.dup
+    def change_path new_path
+        @moves = new_path.dup
     end
 
     def next_tile move
@@ -129,7 +119,6 @@ class Creep
 
     def move fortress
         return if @dead
-        
         @x += (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x > @x
         @x -= (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x < @x
         @y += (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y > @y

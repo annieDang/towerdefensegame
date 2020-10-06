@@ -150,7 +150,7 @@
       "health": 100,
       "money": 15000000000,
       "wave": "lv1",
-      "number_of_creeps": 5,
+      "number_of_creeps": 1,
       "towers": ["0", "1", "2"]
     }
   }
