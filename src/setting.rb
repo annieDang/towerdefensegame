@@ -1,3 +1,10 @@
+def load_settings
+    file = File.read('./settings.json')
+    JSON.parse(file)
+end
+
+SETTING = load_settings
+
 module ZOrder
     BACKGROUND,  UI , PLAYER= *0..2
 end

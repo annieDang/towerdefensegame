@@ -58,7 +58,7 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/SniperTower1.png"
       },
       "level2": {
@@ -66,7 +66,7 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/SniperTower10.png"
       },
       "level3": {
@@ -74,7 +74,7 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/SniperTower22.png"
       }
     },
@@ -84,14 +84,14 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/Cannon1.png"
       },
       "level2": {
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/Cannon10.png"
       },
       "level3": {
@@ -115,14 +115,14 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/Radar6.png"
       },
       "level3": {
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "price": 300,
         "image": "./media/tower/Radar9.png"
       }
     }
@@ -147,7 +147,7 @@
   },
   "level": {
     "1": {
-      "health": 10,
+      "health": 100,
       "money": 500,
       "wave": "lv1",
       "towers": ["0", "1", "2"]

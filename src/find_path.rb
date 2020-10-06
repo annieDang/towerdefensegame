@@ -1,4 +1,4 @@
-require './enums'
+require_relative 'setting'
 
 def initializeVisitsAndParents width, height
     visited =  Array.new(width) do |x|

@@ -1,143 +1,19 @@
 require 'rubygems'
 require 'gosu'
 require 'json'
-require './circle'
-require './find_path'
-require './enums'
+require_relative 'find_path'
+require_relative 'setting'
+
+require_relative 'sprite/creep'
+require_relative 'sprite/circle'
+
+require_relative 'object/obstacle'
+require_relative 'object/fortress'
+require_relative 'object/tower'
 
 WIDTH, HEIGHT = 1000, 600
 SIDE_WIDTH = 200
 TILE_OFFSET = 30
-
-def load_settings
-    file = File.read('./settings.json')
-    JSON.parse(file)
-end
-
-SETTING = load_settings
-
-
-
-class Fortress 
-    attr_accessor :name, :x, :y, :money, :wave, :height, :width, :level, :health
-    def initialize(name, x, y, width, height)
-        @name = name
-        @x = x
-        @y = y
-        @width = width
-        @height = height
-        @level = 1
-        setting = SETTING["level"][@level.to_s]
-        @health = setting["health"]
-        @money = setting["money"]
-        @wave = SETTING["wave"][setting["wave"]]
-    end
-end
-
-class Obstacle
-    attr_accessor :obstacle_type, :x, :y, :image, :name
-    def initialize(obstacle_type, x, y)
-        @obstacle_type = obstacle_type
-        @x = x
-        @y = y
-        if obstacle_type != Obstacle_type::Tower && obstacle_type != Obstacle_type::Empty
-            setting = SETTING["obstacle"][@obstacle_type.to_s]
-            @image = Gosu::Image.new(setting["image"])
-            @name = setting["name"]
-        end
-    end
-end
-
-class Tower < Obstacle
-    attr_accessor :obstacle_type, :x, :y, :image, :level, :name, :cost, :sell_price, :upgrage_price, :damage, :type, :range, :cooldown, :status
-    
-    def initialize(type, x, y)
-        super(Obstacle_type::Tower, x, y)
-
-        @type = type;
-        @status = Tower_status::Building
-        setting = SETTING["tower"][@type.to_s]
-        @level = 1
-        @image = Gosu::Image.new(setting["level#{@level}"]["image"])
-        @range = setting["level#{@level}"]["range"]
-    end
-
-end
-
-class Creep
-    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :image, :radius, :dead, :path
-    def initialize(type, x, y, path)
-        @type = type;
-        @x = x
-        @y = y
-        # load the setting
-        zombie_setting =  SETTING["zombies"][type.to_s]
-        @name = zombie_setting["name"]
-        @speed = zombie_setting["speed"]
-        @damage = zombie_setting["damage"]
-        @profit = zombie_setting["profit"]
-        @health = zombie_setting["health"]
-
-        # characteristic
-        @radius = zombie_setting["radius"]
-        @image = Gosu::Image.new(Circle.new(@radius/2))
-        @color = zombie_setting["color"]
-        @path = path
-        @moves = @path.dup
-        @next_tile_x, @next_tile_y = next_tile(@moves.shift)
-        @dead = false
-    end
-
-    def change_path path
-        @path = path
-        @moves = @path.dup
-    end
-
-    def next_tile move
-        next_tile_x, next_tile_y  = [@x, @y]
-        case move
-        when Direction::Up
-            next_tile_y = @y - TILE_OFFSET
-        when Direction::Down
-            next_tile_y = @y + TILE_OFFSET
-        when Direction::Left
-            next_tile_x = @x - TILE_OFFSET
-        when Direction::Right
-            next_tile_x = @x + TILE_OFFSET
-        end
-        [next_tile_x, next_tile_y]
-    end
-
-    def move fortress
-        return if @dead
-        
-        @x += (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x > @x
-        @x -= (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x < @x
-        @y += (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y > @y
-        @y -= (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y < @y
-        if [@x, @y] == [@next_tile_x,@next_tile_y]
-            next_move = @moves.shift
-            # attack the fortress
-            if next_move.nil?
-                fortress.health = fortress.health - @damage < 0? 0 : fortress.health - @damage
-                @dead = true
-            else
-                @next_tile_x, @next_tile_y = next_tile(next_move)
-            end
-        end
-    end
-
-    def spawn
-        color = Gosu::Color::BLACK
-        case @color
-        when "gray"
-            color = Gosu::Color::GRAY
-        when "yellow"
-            color = Gosu::Color::YELLOW
-        end
-        @image.draw(@x + TILE_OFFSET/2 - @radius/2, @y + TILE_OFFSET/2 - @radius/2, ZOrder::PLAYER, 1, 1, color)
-    end
-end
 
 # Map class holds and draws tiles and gems.
 class GameMap
@@ -204,7 +80,7 @@ class Roamers < (Example rescue Gosu::Window)
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("Last fortress", 2, 17, 2, 2)
+        @fortress = Fortress.new("LAST FORTRESS", 2, 17, 2, 2)
         @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
         add_Hq @fortress,@game_map
         add_infected_land @infected_land,@game_map
@@ -308,7 +184,7 @@ class Roamers < (Example rescue Gosu::Window)
         detail_setting = setting["level#{picked_tower_level}"]
         @info_font.draw("Range: #{detail_setting["range"]}", 20, 400, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("Damage: #{detail_setting["damage"]}", 20, 420, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Profit: #{detail_setting["profit"]}", 20, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Price: #{detail_setting["price"]}", 20, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", 20, 460, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
@@ -316,7 +192,7 @@ class Roamers < (Example rescue Gosu::Window)
         draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
         
         # draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 35, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 25, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(WIDTH - SIDE_WIDTH + 20, 80, Gosu::Color::BLACK, WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
         @info_font.draw("<b><c=00008b>Health: #{@fortress.health}</c></b>", WIDTH - SIDE_WIDTH + 50, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
@@ -485,4 +361,5 @@ class Roamers < (Example rescue Gosu::Window)
 end
 
 
-Roamers.new.show if __FILE__ == $0
+window = Roamers.new
+window.show
