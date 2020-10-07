@@ -10,6 +10,7 @@ require_relative 'sprite/circle'
 require_relative 'object/obstacle'
 require_relative 'object/fortress'
 require_relative 'object/tower'
+require_relative 'button'
 
 WIDTH, HEIGHT = 1000, 600
 SIDE_WIDTH = 200
@@ -97,6 +98,8 @@ class Roamers < (Example rescue Gosu::Window)
         @picked_tower_level = 1
         @picked_tower = nil
         
+        create_buttons
+        
         start_game
 
         @notification = nil
@@ -112,6 +115,25 @@ class Roamers < (Example rescue Gosu::Window)
         @song.play(true)
 
         @game_status = Game_status::Running
+    end
+
+    def create_buttons
+        start_at =  100
+        SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
+            tower_setting = SETTING["tower"][tower_type.to_s]
+            btn = Button.new(20, start_at, 150, 30, tower_setting["name"], "tower_#{tower_type}")
+            btn.set_left_align
+            start_at += 50
+        end
+        
+        @upgrade_btn = Button.new(10, 540, 80, 30, "Upgrade", "upgrade")
+        @sell_btn = Button.new(110, 540, 80, 30, "Sell", "sell")
+        @upgrade_btn.set_hidden(true)
+        @sell_btn.set_hidden(true)
+
+        Button.new((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, "Pause", "start")
+        Button.new((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset", "reset")
+
     end
 
     def make_notification info
@@ -139,21 +161,32 @@ class Roamers < (Example rescue Gosu::Window)
         collision
 
         # game status
-        draw_game_status
+        draw_status
+
+        #draw_buttons
+        Button.buttons.each { |button| draw_button(button) if !button.hidden }
+        
     end
 
-    def draw_game_status
+    def draw_game_status text
+        height = @status_font.height
+        width = @status_font.text_width(text, scale_x = 1)
+        draw_rect(WIDTH/2 - width/2 - 50, HEIGHT/2 - height/2 - 10, width + 100, height + 20, Gosu::Color::GRAY)
+        @status_font.draw(text, WIDTH/2 - width/2,  HEIGHT/2 - height/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+    end
+
+    def draw_status
         case @game_status
         when Game_status::Game_over
-            draw_rect(WIDTH/2 - 100, HEIGHT/2 - 20, 250, 50, Gosu::Color::GRAY)
-            @status_font.draw("GAME OVER!!!", WIDTH/2 - 40, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+            draw_game_status "GAME OVER!!!"
+            
         when Game_status::Pause
-            draw_rect(WIDTH/2 - 100, HEIGHT/2 - 20, 250, 50, Gosu::Color::GRAY)
-            @status_font.draw("PAUSED", WIDTH/2 - 10, HEIGHT/2 - 5, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+            draw_game_status "PAUSED"
         end
-
+        
         if @notification
-            @status_font.draw(@notification, WIDTH/2 - 100,  HEIGHT/2 - 5, ZOrder::BACKGROUND, 1.0, 1.0, Gosu::Color::RED)
+            width = @status_font.text_width(@notification, scale_x = 1)
+            @status_font.draw(@notification, WIDTH/2 - width/2,  HEIGHT/2 - height/2, ZOrder::BACKGROUND, 1.0, 1.0, Gosu::Color::RED)
         end
 
     end
@@ -182,7 +215,6 @@ class Roamers < (Example rescue Gosu::Window)
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             @image = Gosu::Image.new(tower_setting["level1"]["image"])
-            draw_button(20, start_at, 150, 30, tower_setting["name"])
             @image.draw(120, start_at, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
             start_at += 50
         end
@@ -192,8 +224,7 @@ class Roamers < (Example rescue Gosu::Window)
         
         if @picked_tower
             draw_tower_info @picked_tower.type, @picked_tower.level
-            draw_button(10, 500, 80, 30, "Upgrade")
-            draw_button(110, 500, 80, 30, "Sell")
+            
         else
             if @picked_tower_type
                 draw_tower_info @picked_tower_type, @picked_tower_level
@@ -203,12 +234,17 @@ class Roamers < (Example rescue Gosu::Window)
 
     def draw_tower_info picked_tower_type, picked_tower_level
         setting = SETTING["tower"][picked_tower_type.to_s]
-        @info_font.draw("Tower name: #{setting["name"]}", 20, 380, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        
+        image = Gosu::Image.new(setting["level#{picked_tower_level}"]["image"])
+        image.draw(70, 370, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
+        x = 40
+        @info_font.draw("Tower name: #{setting["name"]}", x, 420, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         detail_setting = setting["level#{picked_tower_level}"]
-        @info_font.draw("Range: #{detail_setting["range"]}", 20, 400, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Damage: #{detail_setting["damage"]}", 20, 420, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Price: #{detail_setting["price"]}", 20, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", 20, 460, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Range: #{detail_setting["range"]}", x, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Damage: #{detail_setting["damage"]}", x, 460, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Price: #{detail_setting["price"]}", x, 480, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Sell_price: #{detail_setting["price"]/2}", x, 500, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", x, 520, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
     def draw_right_menu
@@ -226,19 +262,25 @@ class Roamers < (Example rescue Gosu::Window)
         if @game_status == Game_status::Pause
             start_lable = "Start"
         end
-        draw_button((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, start_lable)
-        draw_button((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset")
 
         deco_width = 1.0 * (SIDE_WIDTH - @ui_offset)
         deco_height = 1.0 * (HEIGHT - 250)
         @deco.draw(WIDTH - SIDE_WIDTH + @ui_offset, 250, ZOrder::UI,  deco_width/@deco.width,  deco_height/@deco.height)
     end
 
-    def draw_button x, y, width, height, label
+    def draw_button button 
         color = Gosu::Color::GRAY
-        color = Gosu::Color::BLUE if area_clicked(x, y, x + width, y + height)
-        draw_rect(x, y, width, height, color)
-        @button_font.draw("<b><c=00008b>#{label}</c></b>", x + 20, y + 10, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        color = Gosu::Color::BLUE if area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
+        draw_rect(button.x, button.y, button.width, button.height, color)
+        
+        width = @button_font.text_width(button.label, scale_x = 1)
+        height = @button_font.height
+
+        if button.left_align
+            @button_font.draw(button.label, button.x + 20, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        else
+            @button_font.draw(button.label, button.x + (button.width - width)/2, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        end
     end
 
     def grid_area_clicked
@@ -321,18 +363,13 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def collision
-        @game_map.width.times do |x|
-            @game_map.height.times do |y|
-                tile = @game_map.tiles[x][y]
-                next if tile.obstacle_type != Obstacle_type::Tower
-                
-                @creeps.each do |creep|
-                    if tile.collision?(creep)
-                        tower_x = tile.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-                        tower_y = tile.y * TILE_OFFSET + TILE_OFFSET/2
-                        draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
-                        creep.health -= tile.damage
-                    end
+        Tower.towers().each do |tower|
+            @creeps.each do |creep|
+                if tower.collision?(creep)
+                    tower_x = tower.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
+                    tower_y = tower.y * TILE_OFFSET + TILE_OFFSET/2
+                    draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
+                    creep.health -= tower.damage
                 end
             end
         end
@@ -378,49 +415,88 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def needs_cursor?; true; end
- 
-    def tower_buttons_rect()
-        start_at = 100
-        SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
-            if(area_clicked(20, start_at, 170, start_at + 30))
-                @picked_tower_type = tower_type
-                @picked_tower_level = 1
-                break
-            end
-            start_at += 50
-        end
-    end
 
     def reset
-        if area_clicked((WIDTH - SIDE_WIDTH + 110), 180, WIDTH - SIDE_WIDTH + 110 + 70, 180 + 30)
-            @creeps =[]
-            @game_map.width.times do |x|
-                @game_map.height.times do |y|
-                    tile = @game_map.tiles[x][y]
-                    if tile.obstacle_type == Obstacle_type::Tower
-                        @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
-                    end
+        @creeps =[]
+        @game_map.width.times do |x|
+            @game_map.height.times do |y|
+                tile = @game_map.tiles[x][y]
+                if tile.obstacle_type == Obstacle_type::Tower
+                    @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
                 end
-            end 
+            end
+        end 
 
-            # reset player's data
-            @fortress.load_setting
+        # reset player's data
+        @fortress.load_setting
 
-            # reset game status
-            start_game
-        end
+        # reset game status
+        start_game
     end
 
     def start_pause
-        if area_clicked((WIDTH - SIDE_WIDTH + 20), 180, WIDTH - SIDE_WIDTH + 20 + 180, 180 + 30)
-            case @game_status
-            when Game_status::Pause
-                @game_status = Game_status::Running
-            when Game_status::Running
-                @game_status = Game_status::Pause
-            end
+        case @game_status
+        when Game_status::Pause
+            @game_status = Game_status::Running
+        when Game_status::Running
+            @game_status = Game_status::Pause
         end
     end 
+
+    def upgrade
+        upgrade_price = @picked_tower.get_upgrade_price
+
+        if upgrade_price == -1 
+            make_notification("Out of level!") 
+            return
+        end
+
+        if @fortress.money < upgrade_price
+            make_notification("Not enough money for upgrading!") 
+            return
+        end
+
+        tower = @game_map.tiles[@picked_tower.x][@picked_tower.y]
+        tower.upgrade
+        @fortress.money -= @picked_tower.get_upgrade_price 
+    end
+
+    def sell
+        @game_map.tiles[@picked_tower.x][@picked_tower.y] = Obstacle.new(Obstacle_type::Empty, @picked_tower.x, @picked_tower.y)
+        Tower.towers.reject! {|tower| tower.x == @picked_tower.x  and tower.y == @picked_tower.y }
+        @fortress.money += @picked_tower.sell_price
+
+        reset_picked_tower
+    end
+
+    def is_button_clicked? 
+        Button.buttons.each do |button|
+            next if !area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
+            case button.id
+            when "start"
+                start_pause
+                button.label = "Pause" if (@game_status == Game_status::Running)
+                button.label = "Start" if (@game_status == Game_status::Pause)
+            when "reset"
+                reset
+            when "upgrade"
+                upgrade
+            when "sell"
+                sell
+            else
+                if button.id["tower_"]
+                    @picked_tower_type = button.id[6].to_i
+                    @picked_tower_level = 1
+                end
+            end
+        end
+    end
+
+    def reset_picked_tower
+        @picked_tower = nil
+        @upgrade_btn.set_hidden(true)
+        @sell_btn.set_hidden(true)
+    end
 
     def button_down(id)
 		case id
@@ -430,7 +506,12 @@ class Roamers < (Example rescue Gosu::Window)
                 x, y = grid
                 tile = @game_map.tiles[x][y]
                 case tile.obstacle_type
+                when Obstacle_type::Tower
+                    @picked_tower = tile
+                    @upgrade_btn.set_hidden(false)
+                    @sell_btn.set_hidden(false)
                 when Obstacle_type::Empty
+                    reset_picked_tower
                     if !@picked_tower_type.nil? 
                         tower_setting = SETTING["tower"][@picked_tower_type.to_s]
                         tower_price = tower_setting["level1"]["price"].to_i
@@ -443,19 +524,12 @@ class Roamers < (Example rescue Gosu::Window)
                             make_notification("Not enough money!")
                         end
                     end
-                when Obstacle_type::Tower
-                    @picked_tower = tile
+                else
+                    reset_picked_tower
                 end
             end
 
-            # tower picking
-            tower_buttons_rect
-
-            #reset
-            reset
-
-            # start_pause
-            start_pause
+            is_button_clicked?
 	    end
 	end
 end

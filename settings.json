@@ -58,7 +58,7 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "price": 100,
         "image": "./media/tower/SniperTower1.png"
       },
       "level2": {
@@ -66,7 +66,8 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "upgrade_price": 30,
+        "price": 110,
         "image": "./media/tower/SniperTower10.png"
       },
       "level3": {
@@ -74,7 +75,8 @@
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "upgrade_price": 30,
+        "price": 110,
         "image": "./media/tower/SniperTower22.png"
       }
     },
@@ -93,7 +95,8 @@
         "range": 50,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "upgrade_price": 50,
+        "price": 320,
         "image": "./media/tower/Cannon10.png"
       },
       "level3": {
@@ -101,6 +104,8 @@
         "range": 50,
         "cool_down": 3,
         "profit": 4,
+        "upgrade_price": 50,
+        "price": 350,
         "health": 300,
         "image": "./media/tower/Cannon22.png"
       }
@@ -113,6 +118,7 @@
         "cool_down": 3,
         "profit": 4,
         "health": 300,
+        "price": 500,
         "image": "./media/tower/Radar1.png"
       },
       "level2": {
@@ -120,7 +126,8 @@
         "range": 80,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "upgrade_price": 100,
+        "price": 530,
         "image": "./media/tower/Radar6.png"
       },
       "level3": {
@@ -128,7 +135,8 @@
         "range": 80,
         "cool_down": 3,
         "profit": 4,
-        "price": 300,
+        "upgrade_price": 100,
+        "price": 560,
         "image": "./media/tower/Radar9.png"
       }
     }

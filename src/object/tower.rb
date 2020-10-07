@@ -1,19 +1,43 @@
 class Tower < Obstacle
-    attr_accessor :obstacle_type, :x, :y, :image, :level, :name, :cost, :sell_price, :upgrage_price, :damage, :type, :range, :cooldown, :status
-    
+    attr_accessor :obstacle_type, :x, :y, :image, :level, :name, :price, :sell_price, :damage, :type, :range, :cooldown, :status
+    @@towers = []
     def initialize(type, x, y)
         super(Obstacle_type::Tower, x, y)
 
         @type = type;
         @status = Tower_status::Building
-        setting = SETTING["tower"][@type.to_s]
         @level = 1
-        @image = Gosu::Image.new(setting["level#{@level}"]["image"])
-        @range = setting["level#{@level}"]["range"].to_f
-
-        @damage = setting["level#{@level}"]["damage"]
+        
+        load_setting
 
         @circle = Gosu::Image.new("media/range.png")
+        
+        # put tower in shared list
+        @@towers << self
+    end
+
+    def load_setting
+        setting = SETTING["tower"][@type.to_s]
+        @image = Gosu::Image.new(setting["level#{@level}"]["image"])
+        @range = setting["level#{@level}"]["range"].to_f
+        @damage = setting["level#{@level}"]["damage"]
+        @price = setting["level#{@level}"]["price"]
+        @sell_price = @price/2
+    end
+
+    def get_upgrade_price
+        return -1 if ((@level + 1) >3)
+        setting = SETTING["tower"][@type.to_s]
+        return setting["level#{@level + 1}"]["upgrade_price"]
+    end
+
+    def upgrade
+        @level += 1
+        load_setting
+    end
+
+    def self.towers
+        @@towers
     end
 
     def draw
