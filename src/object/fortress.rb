@@ -5,6 +5,7 @@ class Fortress < Obstacle
         @name = name
         @width = width
         @height = height
+        @level = 1
         load_setting 
     end
 
@@ -15,11 +16,14 @@ class Fortress < Obstacle
     end
 
     def load_setting
-        @level = 1
         setting = SETTING["level"][@level.to_s]
         @health = setting["health"]
         @money = setting["money"]
         @wave = SETTING["wave"][setting["wave"]]
         @number_of_creeps = setting["number_of_creeps"]
+    end
+
+    def next_level
+        @level += 1
     end
 end

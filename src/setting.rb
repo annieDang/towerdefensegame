@@ -46,6 +46,7 @@ end
 module Game_status
    Running = 0
    Pause = 1
-   Next_level = 2
+   Won = 2
    Game_over = 3
+   Next_level = 4
 end

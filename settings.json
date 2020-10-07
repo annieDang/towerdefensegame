@@ -1,4 +1,5 @@
 {
+  "time_per_level": 1000,
   "obstacle": {
     "0": {
       "name": "house",
@@ -26,7 +27,7 @@
       "name": "Melee",
       "damage": 3,
       "speed": 3,
-      "profit": 4,
+      "profit": 50,
       "health": 50,
       "radius": 10,
       "color": "black"
@@ -35,7 +36,7 @@
       "name": "Siege",
       "damage": 3,
       "speed": 5,
-      "profit": 4,
+      "profit": 80,
       "health": 80,
       "radius": 12,
       "color": "gray"
@@ -44,7 +45,7 @@
       "name": "Super",
       "damage": 3,
       "speed": 6,
-      "profit": 4,
+      "profit": 100,
       "health": 500,
       "radius": 14,
       "color": "yellow"
@@ -62,7 +63,7 @@
         "image": "./media/tower/SniperTower1.png"
       },
       "level2": {
-        "range": 100,
+        "range": 120,
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
@@ -71,7 +72,7 @@
         "image": "./media/tower/SniperTower10.png"
       },
       "level3": {
-        "range": 100,
+        "range": 150,
         "damage": 3,
         "cool_down": 3,
         "profit": 4,
@@ -92,7 +93,7 @@
       },
       "level2": {
         "damage": 22,
-        "range": 50,
+        "range": 60,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 50,
@@ -101,7 +102,7 @@
       },
       "level3": {
         "damage": 22,
-        "range": 50,
+        "range": 70,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 50,
@@ -123,7 +124,7 @@
       },
       "level2": {
         "damage": 3,
-        "range": 80,
+        "range": 90,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 100,
@@ -132,7 +133,7 @@
       },
       "level3": {
         "damage": 3,
-        "range": 80,
+        "range": 100,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 100,
@@ -157,14 +158,60 @@
           "count": 20
         }
       ]
+    },
+    "lv2": {
+      "zombie": [
+        {
+          "type": "0",
+          "count": 20
+        },
+        {
+          "type": "1",
+          "count": 50
+        },
+        {
+          "type": "2",
+          "count": 30
+        }
+      ]
+    },
+    "lv3": {
+      "zombie": [
+        {
+          "type": "0",
+          "count": 10
+        },
+        {
+          "type": "1",
+          "count": 30
+        },
+        {
+          "type": "2",
+          "count": 60
+        }
+      ]
     }
   },
   "level": {
     "1": {
-      "health": 100,
-      "money": 1500,
+      "health": 30,
+      "money": 500,
       "wave": "lv1",
       "number_of_creeps": 5,
+      "towers": ["0", "1", "2"]
+    },
+    "2": {
+      "health": 50,
+      "money": 1000,
+      "wave": "lv2",
+      "number_of_creeps": 10,
+      "towers": ["0", "1", "2"]
+    },
+    "3": {
+      "health": 100,
+      "money": 1500,
+      "wave": "lv3",
+      "number_of_creeps": 20,
       "towers": ["0", "1", "2"]
     }
   }

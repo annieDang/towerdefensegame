@@ -40,6 +40,14 @@ class Tower < Obstacle
         @@towers
     end
 
+    def self.clear_towers
+        @@towers = []
+    end
+
+    def self.remove_tower x, y
+        @@towers.reject! {|tower| tower.x == x  and tower.y == y }
+    end
+
     def draw
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
