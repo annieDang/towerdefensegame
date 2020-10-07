@@ -13,9 +13,9 @@ require_relative 'object/tower'
 require_relative 'object/infected_land'
 require_relative 'button'
 
-WIDTH, HEIGHT = 1000, 600
+WIDTH, HEIGHT = 1024, 768
 SIDE_WIDTH = 200
-TILE_OFFSET = 30
+TILE_OFFSET = 48
 
 # Map class holds and draws tiles and gems.
 class GameMap
@@ -29,7 +29,7 @@ def setup_game_map
 
     game_map.tiles = Array.new(game_map.width) do |x|
         Array.new(game_map.height) do |y|
-            case rand(game_map.height)%23
+            case rand(1000)%23
             when 0
                 Obstacle.new(Obstacle_type::Mountain, x, y)
             when 1
@@ -82,10 +82,10 @@ class Roamers < (Example rescue Gosu::Window)
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("LAST FORTRESS", 4, 17, Obstacle_type::HQ, 2, 2)
+        @fortress = Fortress.new("LAST FORTRESS", 2, 9, Obstacle_type::HQ, 2, 2)
        
         @infected_lands = Array.new
-        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
+        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 9, 2) 
         bad_land.path = shortest_path(bad_land, @fortress)
         @infected_lands << bad_land
         add_infected_land(bad_land,@game_map)
@@ -126,7 +126,7 @@ class Roamers < (Example rescue Gosu::Window)
         start_at =  100
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
-            btn = Button.new(20, start_at, 150, 30, tower_setting["name"], "tower_#{tower_type}")
+            btn = Button.new(20, start_at, 150, 40, tower_setting["name"], "tower_#{tower_type}")
             btn.set_left_align
             start_at += 50
         end
@@ -211,9 +211,9 @@ class Roamers < (Example rescue Gosu::Window)
         
         @group_font = Gosu::Font.new(20)
         @status_font = Gosu::Font.new(25)
-        @button_font = Gosu::Font.new(13)
-        @item_name_font = Gosu::Font.new(15)
-        @info_font = Gosu::Font.new(13)
+        @button_font = Gosu::Font.new(15)
+        @item_name_font = Gosu::Font.new(14)
+        @info_font = Gosu::Font.new(15)
         
         draw_left_menu
         draw_right_menu
@@ -420,9 +420,9 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def update
-        return if @game_status == Game_status::Game_over || @game_status == Game_status::Won
-        
         @notification = nil if is_notification_running?
+        
+        return if @game_status == Game_status::Game_over || @game_status == Game_status::Won
 
         if @game_status == Game_status::Next_level and is_notification_running?
             reset
@@ -472,7 +472,7 @@ class Roamers < (Example rescue Gosu::Window)
     def needs_cursor?; true; 
     end
 
-    def reset(orginal)
+    def reset
         @start_game = Gosu.milliseconds
         @time = 0
         @creeps =[]
@@ -486,19 +486,19 @@ class Roamers < (Example rescue Gosu::Window)
         end 
 
         # reset player's data
+        @fortress.level = 1
         @fortress.load_setting
         
-        if (orginal)
-            @infected_lands.each do |land| 
-                @game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Empty, land.x, land.y)
-            end
-
-            @infected_lands = Array.new
-            bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
-            bad_land.path = shortest_path(bad_land, @fortress)
-            @infected_lands << bad_land
-            add_infected_land(bad_land,@game_map)
+        
+        @infected_lands.each do |land| 
+            @game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Empty, land.x, land.y)
         end
+
+        @infected_lands = Array.new
+        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
+        bad_land.path = shortest_path(bad_land, @fortress)
+        @infected_lands << bad_land
+        add_infected_land(bad_land,@game_map)
 
         # reset game status
         start_game
@@ -572,7 +572,7 @@ class Roamers < (Example rescue Gosu::Window)
 
         add_Hq(@fortress,@game_map)
 
-        reset(false)
+        reset
     end
     
     def button_handler
@@ -584,7 +584,7 @@ class Roamers < (Example rescue Gosu::Window)
                 button.label = "Pause" if (@game_status == Game_status::Running)
                 button.label = "Start" if (@game_status == Game_status::Pause)
             when "reset"
-                reset(true)
+                reset
             when "upgrade"
                 upgrade
             when "sell"

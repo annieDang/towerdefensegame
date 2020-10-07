@@ -27,7 +27,7 @@
       "name": "Melee",
       "damage": 5,
       "speed": 4,
-      "profit": 50,
+      "profit": 100,
       "health": 50,
       "radius": 10,
       "color": "black"
@@ -36,7 +36,7 @@
       "name": "Siege",
       "damage": 8,
       "speed": 8,
-      "profit": 80,
+      "profit": 200,
       "health": 80,
       "radius": 12,
       "color": "red"
@@ -45,7 +45,7 @@
       "name": "Super",
       "damage": 3,
       "speed": 14,
-      "profit": 100,
+      "profit": 300,
       "health": 500,
       "radius": 14,
       "color": "yellow"
