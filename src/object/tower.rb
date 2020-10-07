@@ -52,8 +52,13 @@ class Tower < Obstacle
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
         @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
-        @circle.draw(start_x + TILE_OFFSET/2- @range/2, start_y + TILE_OFFSET/2 - @range/2, ZOrder::UI,  @range/@circle.width,  @range/@circle.width)
         @status = Tower_status::Built 
+    end
+
+    def draw_range
+        start_x = @x * TILE_OFFSET + SIDE_WIDTH
+        start_y = @y * TILE_OFFSET
+        @circle.draw(start_x + TILE_OFFSET/2- @range/2, start_y + TILE_OFFSET/2 - @range/2, ZOrder::UI,  @range/@circle.width,  @range/@circle.width)
     end
 
     # Check collision against another sprite

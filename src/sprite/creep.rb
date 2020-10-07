@@ -40,7 +40,7 @@ class Creep
         cal_grid(@back_to_last_move, @grid_x, @grid_y)
     end
 
-    def cal_grid move, last_x, last_y
+    def self.cal_grid move, last_x, last_y
         x = last_x
         y = last_y
         case move
@@ -72,7 +72,7 @@ class Creep
             next_tile_x = @x + TILE_OFFSET
             @back_to_last_move = Direction::Left
         end
-        @grid_x, @grid_y =  cal_grid(move, @grid_x, @grid_y)
+        @grid_x, @grid_y =  Creep.cal_grid(move, @grid_x, @grid_y)
         [next_tile_x, next_tile_y]
     end
 

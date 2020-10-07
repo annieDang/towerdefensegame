@@ -1,5 +1,5 @@
 {
-  "time_per_level": 1000,
+  "time_per_level": 100,
   "obstacle": {
     "0": {
       "name": "house",
@@ -26,7 +26,7 @@
     "0": {
       "name": "Melee",
       "damage": 3,
-      "speed": 3,
+      "speed": 5,
       "profit": 50,
       "health": 50,
       "radius": 10,
@@ -35,7 +35,7 @@
     "1": {
       "name": "Siege",
       "damage": 3,
-      "speed": 5,
+      "speed": 8,
       "profit": 80,
       "health": 80,
       "radius": 12,
@@ -44,7 +44,7 @@
     "2": {
       "name": "Super",
       "damage": 3,
-      "speed": 6,
+      "speed": 10,
       "profit": 100,
       "health": 500,
       "radius": 14,

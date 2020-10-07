@@ -81,7 +81,7 @@ class Roamers < (Example rescue Gosu::Window)
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("LAST FORTRESS", 2, 17, Obstacle_type::HQ, 2, 2)
+        @fortress = Fortress.new("LAST FORTRESS", 4, 17, Obstacle_type::HQ, 2, 2)
         @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
         add_Hq(@fortress,@game_map)
         add_infected_land(@infected_land,@game_map)
@@ -111,11 +111,12 @@ class Roamers < (Example rescue Gosu::Window)
 
         @song = Gosu::Song.new("media/sound/background_normal.mp3") 
         @song.volume = 0.2
-        @song.play(true)
+        # @song.play(true)
 
         @game_status = Game_status::Running
 
         @start_game = Gosu.milliseconds
+        puts @start_game
         @time = 0
     end
 
@@ -167,7 +168,6 @@ class Roamers < (Example rescue Gosu::Window)
 
         #draw_buttons
         Button.buttons.each { |button| draw_button(button) if !button.hidden }
-        
     end
 
     def draw_game_status text
@@ -229,7 +229,7 @@ class Roamers < (Example rescue Gosu::Window)
         
         if @picked_tower
             draw_tower_info @picked_tower.type, @picked_tower.level
-            
+            @picked_tower.draw_range
         else
             if @picked_tower_type
                 draw_tower_info @picked_tower_type, @picked_tower_level
@@ -355,6 +355,16 @@ class Roamers < (Example rescue Gosu::Window)
                 end
             end
         end
+        next_x = @infected_land.x
+        next_y = @infected_land.y
+    end
+    
+    # indicator lines
+    def draw_indicator x, y, color
+        start_x = x * TILE_OFFSET + SIDE_WIDTH
+        start_y = y * TILE_OFFSET
+        indicator = Gosu::Image.new(Circle.new(2))
+        indicator.draw(start_x + TILE_OFFSET/2, start_y + TILE_OFFSET/2, ZOrder::PLAYER, 1, 1, color)
     end
 
     def draw_grid
@@ -397,27 +407,26 @@ class Roamers < (Example rescue Gosu::Window)
         if @game_status == Game_status::Next_level
             reset
             @fortress.next_level
-            @game_status = Game_status::Running
+            return
         end
-
-        if @fortress.level >3
+        
+        if @fortress.level >=3
             @game_status == Game_status::Won
             return
         end
-
         if @fortress.health < 0
             @game_status = Game_status::Game_over
             return 
         end
-
         @time = (Gosu.milliseconds - @start_game)/1000 if @game_status == Game_status::Running
         # 30 seconds/level
         if @time >= SETTING["time_per_level"]
+            puts "@time: #{@time} @game_status: #{@game_status}"
             @notification = "Next level"
-            @game_status == Game_status::Next_level
+            @game_status = Game_status::Next_level
+            puts "@time: #{@time} @game_status: #{@game_status}"
             return
         end
-        
         if @game_status == Game_status::Running
             # move them
             @creeps.each { |creep| creep.move @fortress}
@@ -434,10 +443,14 @@ class Roamers < (Example rescue Gosu::Window)
             end
         end
 
-        if (Gosu.milliseconds - @notification_start_time) > 1000
+        if !is_notification_running?
             @notification = nil
         end
 
+    end
+
+    def is_notification_running?
+        (Gosu.milliseconds - @notification_start_time) > 1000
     end
 
     def needs_cursor?; true; end
@@ -445,7 +458,7 @@ class Roamers < (Example rescue Gosu::Window)
     def reset
         @start_game = Gosu.milliseconds
         @time = 0
-
+        puts "@start_game = #{@start_game}"
         @creeps =[]
         @game_map.width.times do |x|
             @game_map.height.times do |y|
@@ -464,6 +477,8 @@ class Roamers < (Example rescue Gosu::Window)
 
         # reset towers
         Tower.clear_towers
+
+        @game_status = Game_status::Running
     end
 
     def start_pause
