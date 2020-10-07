@@ -36,7 +36,6 @@ def find_path parents, enter, destination
     path = Array.new
     x = destination.x
     y = destination.y
-    puts "#{destination}"
     
     while !(x == enter.x and y == enter.y) do
         next_x = parents[x][y].x
@@ -61,10 +60,11 @@ def generate_mapping game_map, enter, destination
     
     while !queue.empty? and !found do
         length = queue.length
-
+        
         for k in 0..length-1 do
+            
             current_tile = queue.shift
-            if (current_tile.x == @game_map.width)  && (current_tile.y == @game_map.height)
+            if (current_tile.x == destination.x)  && (current_tile.y == destination.y)
                 puts "hit it"
                 found = true;
                 break
@@ -98,11 +98,14 @@ def generate_mapping game_map, enter, destination
             end
         end
     end
-    parents
+    
+    found ? parents: nil
 end
 
 def shortest_path enter, destination
     mapping_map = generate_mapping(@game_map, enter, destination)
+
+    return nil if !mapping_map
 
     path = find_path(mapping_map, enter, destination)
     path = path.reverse 

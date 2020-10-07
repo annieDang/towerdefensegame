@@ -22,6 +22,34 @@ class GameMap
     attr_accessor :width, :height, :tiles, :side_width
 end
 
+def regenerate_terrain(game_map)
+    game_map.width = (WIDTH - SIDE_WIDTH * 2)/TILE_OFFSET
+    game_map.height = HEIGHT/TILE_OFFSET
+
+    game_map.tiles = Array.new(game_map.width) do |x|
+        Array.new(game_map.height) do |y|
+            case game_map.tiles[x][y].obstacle_type
+            when Obstacle_type::HQ
+                game_map.tiles[x][y]
+            when Obstacle_type::Infected_forest
+                game_map.tiles[x][y]
+            else
+                case rand(1000)%23
+                when 0
+                    Obstacle.new(Obstacle_type::Mountain, x, y)
+                when 1
+                    Obstacle.new(Obstacle_type::Tree, x, y)
+                when 2
+                    Obstacle.new(Obstacle_type::House, x, y)
+                else
+                    Obstacle.new(Obstacle_type::Empty, x, y)
+                end
+            end
+        end
+      end
+      game_map
+end
+
 def setup_game_map
     game_map = GameMap.new
     game_map.width = (WIDTH - SIDE_WIDTH * 2)/TILE_OFFSET
@@ -86,9 +114,9 @@ class Roamers < (Example rescue Gosu::Window)
        
         @infected_lands = Array.new
         bad_land = Infected_land.new(Obstacle_type::Infected_forest, 9, 2) 
-        bad_land.path = shortest_path(bad_land, @fortress)
-        @infected_lands << bad_land
         add_infected_land(bad_land,@game_map)
+        bad_land.path = get_shortest_path(bad_land)
+        @infected_lands << bad_land
         
         add_Hq(@fortress,@game_map)
 
@@ -122,13 +150,22 @@ class Roamers < (Example rescue Gosu::Window)
         @show_tower_indicator = false
     end
 
+    def get_shortest_path(bad_land)
+        shortest_path = shortest_path(bad_land, @fortress)
+        while !shortest_path
+            regenerate_terrain(@game_map)
+            shortest_path = shortest_path(bad_land, @fortress)
+        end
+        shortest_path
+    end
+
     def create_buttons
         start_at =  100
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             btn = Button.new(20, start_at, 150, 40, tower_setting["name"], "tower_#{tower_type}")
             btn.set_left_align
-            start_at += 50
+            start_at += 60
         end
         
         @upgrade_btn = Button.new(10, 540, 80, 30, "Upgrade", "upgrade")
@@ -230,7 +267,7 @@ class Roamers < (Example rescue Gosu::Window)
             tower_setting = SETTING["tower"][tower_type.to_s]
             @image = Gosu::Image.new(tower_setting["level1"]["image"])
             @image.draw(120, start_at, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
-            start_at += 50
+            start_at += 60
         end
 
         @group_font.draw("<b><c=00008b>INFORMATION</c></b>", 35, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
@@ -401,6 +438,9 @@ class Roamers < (Example rescue Gosu::Window)
                         creep.speed = creep.speed - tower.damage  < 1? 1 : creep.speed - tower.damage
                     end
                     
+                else
+                    # make it speed normal again
+                    creep.speed = SETTING["zombies"][creep.type.to_s]["speed"]
                 end
             end
         end
@@ -473,42 +513,16 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def reset
-        @start_game = Gosu.milliseconds
-        @time = 0
-        @creeps =[]
-        @game_map.width.times do |x|
-            @game_map.height.times do |y|
-                tile = @game_map.tiles[x][y]
-                if tile.obstacle_type == Obstacle_type::Tower
-                    @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
-                end
-            end
-        end 
+        regenerate_terrain(@game_map)
 
         # reset player's data
         @fortress.level = 1
         @fortress.load_setting
-        
-        
-        @infected_lands.each do |land| 
-            @game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Empty, land.x, land.y)
-        end
 
-        @infected_lands = Array.new
-        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
-        bad_land.path = shortest_path(bad_land, @fortress)
-        @infected_lands << bad_land
-        add_infected_land(bad_land,@game_map)
+        @infected_land = Array.new
+        create_random_infected_land
 
-        # reset game status
-        start_game
-
-        # reset towers
-        Tower.clear_towers
-
-        @game_status = Game_status::Running
-
-        @show_tower_indicator = false
+        reset_params
     end
 
     def start_pause
@@ -555,11 +569,11 @@ class Roamers < (Example rescue Gosu::Window)
             rand_x = rand(@game_map.width - 1)
             rand_y = rand(@game_map.height - 1)
         end
-
-        new_land = Infected_land.new(Obstacle_type::Infected_forest, rand_x, rand_y) 
-        new_land.path = shortest_path(new_land, @fortress)
-        @infected_lands << new_land
-        add_infected_land(new_land,@game_map)
+        
+        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 9, 2) 
+        add_infected_land(bad_land,@game_map)
+        bad_land.path = get_shortest_path(bad_land)
+        @infected_lands << bad_land
     end
 
     def create_random_map
@@ -571,8 +585,23 @@ class Roamers < (Example rescue Gosu::Window)
         create_random_infected_land()
 
         add_Hq(@fortress,@game_map)
+        reset_params
+    end
 
-        reset
+    def reset_params
+        @start_game = Gosu.milliseconds
+        @time = 0
+        @creeps =[]
+
+        # reset game status
+        start_game
+
+        # reset towers
+        Tower.clear_towers
+
+        @game_status = Game_status::Running
+
+        @show_tower_indicator = false
     end
     
     def button_handler
