@@ -23,7 +23,8 @@ class Creep
         @mapping_map = mapping_map
         @moves = @path.dup
         @game_map = nil
-        
+
+        puts "#{@path}"
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @back_to_last_move = @path[0]
         @dead = false

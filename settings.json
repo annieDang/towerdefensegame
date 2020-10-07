@@ -1,5 +1,5 @@
 {
-  "time_per_level": 100,
+  "time_per_level": 50,
   "obstacle": {
     "0": {
       "name": "house",
@@ -25,8 +25,8 @@
   "zombies": {
     "0": {
       "name": "Melee",
-      "damage": 3,
-      "speed": 5,
+      "damage": 5,
+      "speed": 4,
       "profit": 50,
       "health": 50,
       "radius": 10,
@@ -34,7 +34,7 @@
     },
     "1": {
       "name": "Siege",
-      "damage": 3,
+      "damage": 8,
       "speed": 8,
       "profit": 80,
       "health": 80,
@@ -44,7 +44,7 @@
     "2": {
       "name": "Super",
       "damage": 3,
-      "speed": 10,
+      "speed": 14,
       "profit": 100,
       "health": 500,
       "radius": 14,
@@ -60,6 +60,8 @@
         "cool_down": 3,
         "profit": 4,
         "price": 100,
+        "tower_type": 0,
+        "des": "Shoot them with guns",
         "image": "./media/tower/SniperTower1.png"
       },
       "level2": {
@@ -69,6 +71,8 @@
         "profit": 4,
         "upgrade_price": 30,
         "price": 110,
+        "tower_type": 0,
+        "des": "Shoot them with load of guns",
         "image": "./media/tower/SniperTower10.png"
       },
       "level3": {
@@ -78,6 +82,8 @@
         "profit": 4,
         "upgrade_price": 30,
         "price": 110,
+        "tower_type": 0,
+        "des": "Shoot Shoot",
         "image": "./media/tower/SniperTower22.png"
       }
     },
@@ -89,6 +95,8 @@
         "cool_down": 3,
         "profit": 4,
         "price": 300,
+        "tower_type": 0,
+        "des": "Like a boom!",
         "image": "./media/tower/Cannon1.png"
       },
       "level2": {
@@ -98,6 +106,8 @@
         "profit": 4,
         "upgrade_price": 50,
         "price": 320,
+        "tower_type": 0,
+        "des": "Kaboom",
         "image": "./media/tower/Cannon10.png"
       },
       "level3": {
@@ -108,18 +118,22 @@
         "upgrade_price": 50,
         "price": 350,
         "health": 300,
+        "tower_type": 0,
+        "des": "Phew phew",
         "image": "./media/tower/Cannon22.png"
       }
     },
     "2": {
       "name": "Effect",
       "level1": {
-        "damage": 3,
+        "damage": 2,
         "range": 80,
         "cool_down": 3,
         "profit": 4,
         "health": 300,
         "price": 500,
+        "tower_type": 2,
+        "des": "Slow them down!",
         "image": "./media/tower/Radar1.png"
       },
       "level2": {
@@ -129,15 +143,19 @@
         "profit": 4,
         "upgrade_price": 100,
         "price": 530,
+        "tower_type": 2,
+        "des": "Make them stiff!",
         "image": "./media/tower/Radar6.png"
       },
       "level3": {
-        "damage": 3,
+        "damage": 5,
         "range": 100,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 100,
         "price": 560,
+        "tower_type": 2,
+        "des": "Stop them!",
         "image": "./media/tower/Radar9.png"
       }
     }
@@ -194,22 +212,22 @@
   },
   "level": {
     "1": {
-      "health": 30,
-      "money": 500,
+      "health": 100,
+      "money": 2000,
       "wave": "lv1",
-      "number_of_creeps": 5,
+      "number_of_creeps": 15,
       "towers": ["0", "1", "2"]
     },
     "2": {
-      "health": 50,
-      "money": 1000,
+      "health": 200,
+      "money": 3000,
       "wave": "lv2",
       "number_of_creeps": 10,
       "towers": ["0", "1", "2"]
     },
     "3": {
-      "health": 100,
-      "money": 1500,
+      "health": 300,
+      "money": 2500,
       "wave": "lv3",
       "number_of_creeps": 20,
       "towers": ["0", "1", "2"]

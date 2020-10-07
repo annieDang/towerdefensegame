@@ -1,5 +1,5 @@
 class Tower < Obstacle
-    attr_accessor :obstacle_type, :x, :y, :image, :level, :name, :price, :sell_price, :damage, :type, :range, :cooldown, :status
+    attr_accessor :obstacle_type, :x, :y, :image, :level, :name, :price, :sell_price, :damage, :type, :range, :cooldown, :status, :tower_type, :des
     @@towers = []
     def initialize(type, x, y)
         super(Obstacle_type::Tower, x, y)
@@ -23,6 +23,8 @@ class Tower < Obstacle
         @damage = setting["level#{@level}"]["damage"]
         @price = setting["level#{@level}"]["price"]
         @sell_price = @price/2
+        @tower_type = setting["level#{@level}"]["tower_type"]
+        @des = setting["level#{@level}"]["des"]
     end
 
     def get_upgrade_price
@@ -52,10 +54,9 @@ class Tower < Obstacle
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
         @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
-        @status = Tower_status::Built 
     end
 
-    def draw_range
+    def draw_indicator
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
         @circle.draw(start_x + TILE_OFFSET/2- @range/2, start_y + TILE_OFFSET/2 - @range/2, ZOrder::UI,  @range/@circle.width,  @range/@circle.width)

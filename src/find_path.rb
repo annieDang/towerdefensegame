@@ -34,7 +34,10 @@ end
 
 def find_path parents, enter, destination
     path = Array.new
-    x, y = destination
+    x = destination.x
+    y = destination.y
+    puts "#{destination}"
+    
     while !(x == enter.x and y == enter.y) do
         next_x = parents[x][y].x
         next_y = parents[x][y].y
@@ -61,7 +64,7 @@ def generate_mapping game_map, enter, destination
 
         for k in 0..length-1 do
             current_tile = queue.shift
-            if (current_tile.x == (destination.x + destination.width) )  && (current_tile.y == (destination.y + destination.height))
+            if (current_tile.x == @game_map.width)  && (current_tile.y == @game_map.height)
                 puts "hit it"
                 found = true;
                 break
@@ -99,21 +102,9 @@ def generate_mapping game_map, enter, destination
 end
 
 def shortest_path enter, destination
-    all_paths = Array.new
-    for x in (destination.x)..(destination.x + destination.width - 1)
-        for y in (destination.y)..(destination.y + destination.height - 1)
-            all_paths << find_path(@mapping_map, enter, [x,y])
-        end
-    end 
-    
-    # since HQ includes many points, find the closest point
-    shortest_path_indx = 0
-    min = all_paths[0].length
-    for inx in 1...all_paths.length do
-        shortest_path_indx = inx if all_paths[inx].length < min
-    end
+    mapping_map = generate_mapping(@game_map, enter, destination)
 
-    path = all_paths[shortest_path_indx]
+    path = find_path(mapping_map, enter, destination)
     path = path.reverse 
 
     puts "path length :#{path.length}"

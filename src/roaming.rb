@@ -10,6 +10,7 @@ require_relative 'sprite/circle'
 require_relative 'object/obstacle'
 require_relative 'object/fortress'
 require_relative 'object/tower'
+require_relative 'object/infected_land'
 require_relative 'button'
 
 WIDTH, HEIGHT = 1000, 600
@@ -68,6 +69,7 @@ def area_clicked(leftX, topY, rightX, bottomY)
     end
 end
 
+
 class Roamers < (Example rescue Gosu::Window)
     def initialize
         super WIDTH, HEIGHT
@@ -75,22 +77,20 @@ class Roamers < (Example rescue Gosu::Window)
         self.caption = "Roamers"
         @ground = Gosu::Image.new("media/ground.jpeg")
         @circle = Gosu::Image.new("media/circle.png")
-        @deco = Gosu::Image.new("media/fun.jpeg")
 
         # generate a random map full with obstacles 
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
         @fortress = Fortress.new("LAST FORTRESS", 4, 17, Obstacle_type::HQ, 2, 2)
-        @infected_land = Obstacle.new(Obstacle_type::Infected_forest, 16, 2)
-        add_Hq(@fortress,@game_map)
-        add_infected_land(@infected_land,@game_map)
-
-        # cache
-        @mapping_map = generate_mapping(@game_map, @infected_land, @fortress)
+       
+        @infected_lands = Array.new
+        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
+        bad_land.path = shortest_path(bad_land, @fortress)
+        @infected_lands << bad_land
+        add_infected_land(bad_land,@game_map)
         
-        # get shortest path 
-        @path = shortest_path(@infected_land, @fortress)
+        add_Hq(@fortress,@game_map)
 
         @creeps = Array.new
 
@@ -104,6 +104,8 @@ class Roamers < (Example rescue Gosu::Window)
 
         @notification = nil
         @notification_start_time = Gosu.milliseconds
+
+        @collision_time = Gosu.milliseconds
     end
 
     def start_game
@@ -116,8 +118,8 @@ class Roamers < (Example rescue Gosu::Window)
         @game_status = Game_status::Running
 
         @start_game = Gosu.milliseconds
-        puts @start_game
         @time = 0
+        @show_tower_indicator = false
     end
 
     def create_buttons
@@ -136,7 +138,12 @@ class Roamers < (Example rescue Gosu::Window)
 
         Button.new((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, "Pause", "start")
         Button.new((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset", "reset")
-
+        
+        start_y = 350
+        Button.new((WIDTH - SIDE_WIDTH + 20), start_y, 160, 30, "Load a map", "load_map")
+        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 50, 160, 30, "Create random map", "creat_random_map")
+        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 100, 160, 30, "Show tower indicator", "show_tower_indicator")
+        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 150, 160, 30, "More zombies", "more_zombies")
     end
 
     def make_notification info
@@ -161,7 +168,10 @@ class Roamers < (Example rescue Gosu::Window)
         dragging_tower
 
         # show collision
-        collision
+        if Gosu.milliseconds - @collision_time > 1000
+            @collision_time = Gosu.milliseconds
+            collision
+        end
 
         # game status
         draw_status
@@ -196,7 +206,6 @@ class Roamers < (Example rescue Gosu::Window)
 
     end
 
-
     def draw_ui
         @ui_offset = 5
         
@@ -229,7 +238,6 @@ class Roamers < (Example rescue Gosu::Window)
         
         if @picked_tower
             draw_tower_info @picked_tower.type, @picked_tower.level
-            @picked_tower.draw_range
         else
             if @picked_tower_type
                 draw_tower_info @picked_tower_type, @picked_tower_level
@@ -264,14 +272,8 @@ class Roamers < (Example rescue Gosu::Window)
         @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 140, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         
-        start_lable = "Pause"
-        if @game_status == Game_status::Pause
-            start_lable = "Start"
-        end
+        draw_line(WIDTH - SIDE_WIDTH + 2* @ui_offset, 300, Gosu::Color::BLACK, WIDTH - @ui_offset, 300, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
-        deco_width = 1.0 * (SIDE_WIDTH - @ui_offset)
-        deco_height = 1.0 * (HEIGHT - 250)
-        @deco.draw(WIDTH - SIDE_WIDTH + @ui_offset, 250, ZOrder::UI,  deco_width/@deco.width,  deco_height/@deco.height)
     end
 
     def draw_button button 
@@ -350,13 +352,18 @@ class Roamers < (Example rescue Gosu::Window)
                         drawedHQ = true
                         next
                     end
-                    
+
+                    if tile.obstacle_type == Obstacle_type::Tower 
+                        start_x = x * TILE_OFFSET + SIDE_WIDTH
+                        start_y = y * TILE_OFFSET
+                        draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color::GRAY, ZOrder::BACKGROUND)
+                        tile.draw_indicator if @show_tower_indicator
+                    end
+
                     tile.draw
                 end
             end
         end
-        next_x = @infected_land.x
-        next_y = @infected_land.y
     end
     
     # indicator lines
@@ -384,8 +391,16 @@ class Roamers < (Example rescue Gosu::Window)
                 if tower.collision?(creep)
                     tower_x = tower.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
                     tower_y = tower.y * TILE_OFFSET + TILE_OFFSET/2
-                    draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
-                    creep.health -= tower.damage
+                    
+                    case tower.tower_type
+                    when Tower_type::Range
+                        draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
+                        creep.health -= tower.damage 
+                    when Tower_type::Effect
+                        draw_line(tower_x, tower_y, Gosu::Color::BLUE, creep.x, creep.y, Gosu::Color::BLUE, ZOrder::PLAYER, mode=:default)
+                        creep.speed = creep.speed - tower.damage  < 1? 1 : creep.speed - tower.damage
+                    end
+                    
                 end
             end
         end
@@ -395,39 +410,44 @@ class Roamers < (Example rescue Gosu::Window)
         @last_sprawn_time = Gosu.milliseconds
         zombies = @fortress.wave["zombie"]
         sum = zombies.inject(0){|sum,x| sum + x["count"].to_i }
+
         random_no = rand(sum)
         zombies.each do |zombie|
-            return Creep.new(zombie["type"], @infected_land.x, @infected_land.y, @path, @mapping_map) if ((random_no -= zombie["count"]) < 0)
+            land_indx = rand(@infected_lands.length)
+            land = @infected_lands[land_indx]
+            return Creep.new(zombie["type"], land.x, land.y, land.path, @mapping_map) if ((random_no -= zombie["count"]) < 0)
         end
     end
 
     def update
         return if @game_status == Game_status::Game_over || @game_status == Game_status::Won
         
-        if @game_status == Game_status::Next_level
+        @notification = nil if is_notification_running?
+
+        if @game_status == Game_status::Next_level and is_notification_running?
             reset
             @fortress.next_level
             return
         end
-        
+
         if @fortress.level >=3
-            @game_status == Game_status::Won
+            @game_status = Game_status::Won
             return
         end
-        if @fortress.health < 0
+
+        if @fortress.health <= 0
             @game_status = Game_status::Game_over
             return 
         end
-        @time = (Gosu.milliseconds - @start_game)/1000 if @game_status == Game_status::Running
-        # 30 seconds/level
-        if @time >= SETTING["time_per_level"]
-            puts "@time: #{@time} @game_status: #{@game_status}"
-            @notification = "Next level"
-            @game_status = Game_status::Next_level
-            puts "@time: #{@time} @game_status: #{@game_status}"
-            return
-        end
+
         if @game_status == Game_status::Running
+            @time = (Gosu.milliseconds - @start_game)/1000 if @game_status == Game_status::Running
+            if @time >= SETTING["time_per_level"]
+                @notification = "Next level"
+                @game_status = Game_status::Next_level
+                return
+            end
+
             # move them
             @creeps.each { |creep| creep.move @fortress}
             
@@ -437,28 +457,24 @@ class Roamers < (Example rescue Gosu::Window)
 
             # remove the died 
             @creeps.reject! {|creep| creep.dead }
-            
-            if(@creeps.length < @fortress.number_of_creeps)
-                @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 1000)
-            end
-        end
 
-        if !is_notification_running?
-            @notification = nil
+            if(@creeps.length < @fortress.number_of_creeps)
+                @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 500)
+            end
         end
 
     end
 
     def is_notification_running?
-        (Gosu.milliseconds - @notification_start_time) > 1000
+        (Gosu.milliseconds - @notification_start_time) > 500
     end
 
-    def needs_cursor?; true; end
+    def needs_cursor?; true; 
+    end
 
-    def reset
+    def reset(orginal)
         @start_game = Gosu.milliseconds
         @time = 0
-        puts "@start_game = #{@start_game}"
         @creeps =[]
         @game_map.width.times do |x|
             @game_map.height.times do |y|
@@ -471,6 +487,18 @@ class Roamers < (Example rescue Gosu::Window)
 
         # reset player's data
         @fortress.load_setting
+        
+        if (orginal)
+            @infected_lands.each do |land| 
+                @game_map.tiles[land.x][land.y] = Obstacle.new(Obstacle_type::Empty, land.x, land.y)
+            end
+
+            @infected_lands = Array.new
+            bad_land = Infected_land.new(Obstacle_type::Infected_forest, 16, 2) 
+            bad_land.path = shortest_path(bad_land, @fortress)
+            @infected_lands << bad_land
+            add_infected_land(bad_land,@game_map)
+        end
 
         # reset game status
         start_game
@@ -479,6 +507,8 @@ class Roamers < (Example rescue Gosu::Window)
         Tower.clear_towers
 
         @game_status = Game_status::Running
+
+        @show_tower_indicator = false
     end
 
     def start_pause
@@ -517,7 +547,35 @@ class Roamers < (Example rescue Gosu::Window)
         reset_picked_tower
     end
 
-    def is_button_clicked? 
+    def create_random_infected_land
+        rand_x = rand(@game_map.width - 1)
+        rand_y = rand(@game_map.height - 1)
+        
+        while (rand_x - @fortress.x).abs >=10 and (rand_y - @fortress.y).abs >=10
+            rand_x = rand(@game_map.width - 1)
+            rand_y = rand(@game_map.height - 1)
+        end
+
+        new_land = Infected_land.new(Obstacle_type::Infected_forest, rand_x, rand_y) 
+        new_land.path = shortest_path(new_land, @fortress)
+        @infected_lands << new_land
+        add_infected_land(new_land,@game_map)
+    end
+
+    def create_random_map
+        @game_map = setup_game_map
+        @fortress.x = rand(1..@game_map.width - 2)
+        @fortress.y = rand(1..@game_map.height - 2)
+        
+        @infected_lands = Array.new
+        create_random_infected_land()
+
+        add_Hq(@fortress,@game_map)
+
+        reset(false)
+    end
+    
+    def button_handler
         Button.buttons.each do |button|
             next if !area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
             case button.id
@@ -526,11 +584,21 @@ class Roamers < (Example rescue Gosu::Window)
                 button.label = "Pause" if (@game_status == Game_status::Running)
                 button.label = "Start" if (@game_status == Game_status::Pause)
             when "reset"
-                reset
+                reset(true)
             when "upgrade"
                 upgrade
             when "sell"
                 sell
+            when "load_map"
+
+            when "creat_random_map"
+                create_random_map
+            when "show_tower_indicator"
+                @show_tower_indicator = !@show_tower_indicator
+                button.label = "Show tower indicator" if !@show_tower_indicator
+                button.label = "Hidden tower indicator" if @show_tower_indicator
+            when "more_zombies"
+                create_random_infected_land()
             else
                 if button.id["tower_"]
                     reset_picked_tower
@@ -577,11 +645,10 @@ class Roamers < (Example rescue Gosu::Window)
                 end
             end
 
-            is_button_clicked?
+            button_handler
 	    end
 	end
 end
-
 
 window = Roamers.new
 window.show
