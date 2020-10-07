@@ -39,7 +39,7 @@
       "profit": 80,
       "health": 80,
       "radius": 12,
-      "color": "gray"
+      "color": "red"
     },
     "2": {
       "name": "Super",
@@ -111,7 +111,7 @@
         "image": "./media/tower/Cannon10.png"
       },
       "level3": {
-        "damage": 22,
+        "damage": 24,
         "range": 70,
         "cool_down": 3,
         "profit": 4,
@@ -213,21 +213,21 @@
   "level": {
     "1": {
       "health": 100,
-      "money": 2000,
+      "money": 1000,
       "wave": "lv1",
       "number_of_creeps": 15,
       "towers": ["0", "1", "2"]
     },
     "2": {
       "health": 200,
-      "money": 3000,
+      "money": 2000,
       "wave": "lv2",
       "number_of_creeps": 10,
       "towers": ["0", "1", "2"]
     },
     "3": {
       "health": 300,
-      "money": 2500,
+      "money": 3000,
       "wave": "lv3",
       "number_of_creeps": 20,
       "towers": ["0", "1", "2"]

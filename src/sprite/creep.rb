@@ -28,7 +28,6 @@ class Creep
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         @back_to_last_move = @path[0]
         @dead = false
-
     end
 
     def cal_pos
@@ -105,8 +104,8 @@ class Creep
     def spawn
         color = Gosu::Color::BLACK
         case @color
-        when "gray"
-            color = Gosu::Color::GRAY
+        when "red"
+            color = Gosu::Color::RED
         when "yellow"
             color = Gosu::Color::YELLOW
         end
