@@ -22,6 +22,9 @@ class Button
     def set_hidden hidden
         @hidden = hidden
     end
+    def hidden?
+        @hidden
+    end
 
     def self.buttons
         @@buttons

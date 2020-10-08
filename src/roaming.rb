@@ -51,7 +51,7 @@ end
 
 def setup_game_map
     game_map = GameMap.new
-    game_map.width = (WIDTH - SIDE_WIDTH * 2)/TILE_OFFSET
+    game_map.width = (WIDTH - SIDE_WIDTH)/TILE_OFFSET
     game_map.height = HEIGHT/TILE_OFFSET
 
     game_map.tiles = Array.new(game_map.width) do |x|
@@ -159,7 +159,10 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def create_buttons
-        start_at =  100
+        Button.new(20, 70, 70, 30, "Pause", "start")
+        Button.new(110, 70, 70, 30, "Reset", "reset")
+
+        start_at =  210
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             btn = Button.new(20, start_at, 150, 40, tower_setting["name"], "tower_#{tower_type}")
@@ -167,19 +170,17 @@ class Roamers < (Example rescue Gosu::Window)
             start_at += 60
         end
         
-        @upgrade_btn = Button.new(10, 540, 80, 30, "Upgrade", "upgrade")
-        @sell_btn = Button.new(110, 540, 80, 30, "Sell", "sell")
+        @upgrade_btn = Button.new(10, start_at + 180, 80, 30, "Upgrade", "upgrade")
+        @sell_btn = Button.new(110, start_at + 180, 80, 30, "Sell", "sell")
         @upgrade_btn.set_hidden(true)
         @sell_btn.set_hidden(true)
 
-        Button.new((WIDTH - SIDE_WIDTH + 20), 220, 70, 30, "Pause", "start")
-        Button.new((WIDTH - SIDE_WIDTH + 110), 220, 70, 30, "Reset", "reset")
-        
-        start_y = 450
-        Button.new((WIDTH - SIDE_WIDTH + 20), start_y, 160, 30, "Load a map", "load_map")
-        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 50, 160, 30, "Create random map", "creat_random_map")
-        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 100, 160, 30, "Show tower indicator", "show_tower_indicator")
-        Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 150, 160, 30, "More zombies", "more_zombies")
+        start_y = 610
+        step = 40
+        Button.new(20, start_y, 160, 30, "Load a map", "load_map")
+        Button.new(20, start_y + step, 160, 30, "Create random map", "creat_random_map")
+        Button.new(20, start_y + step * 2, 160, 30, "Show tower indicator", "show_tower_indicator")
+        Button.new(20, start_y + step * 3, 160, 30, "More zombies", "more_zombies")
     end
 
     def make_notification(info, time_to_show = 1000)
@@ -249,25 +250,30 @@ class Roamers < (Example rescue Gosu::Window)
         @info_font = Gosu::Font.new(15)
         
         draw_left_menu
-        draw_right_menu
+        draw_game_info
     end
 
     def draw_left_menu
         draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
-        @group_font.draw("STORE", 65, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        draw_line(20, 80, Gosu::Color::BLACK, SIDE_WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        home_lable_y = 20
+        @group_font.draw("#{@fortress.name}", 30, home_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(20, home_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, home_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+
+        store_lable_y = 150
+        @group_font.draw("STORE", 65, store_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(20, store_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, store_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
         # draw_tower_list
-        start_at = 100
+        start_at = 200
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             @image = Gosu::Image.new(tower_setting["level1"]["image"])
             @image.draw(120, start_at, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
             start_at += 60
         end
-
-        @group_font.draw("INFORMATION", 35, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        draw_line(20, 345, Gosu::Color::BLACK, SIDE_WIDTH - 20, 345, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        information_lable_y = 400
+        @group_font.draw("INFORMATION", 35, information_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        draw_line(20, information_lable_y+25, Gosu::Color::BLACK, SIDE_WIDTH - 20, information_lable_y +25, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
         if @picked_tower
             draw_tower_info @picked_tower.type, @picked_tower.level
@@ -280,45 +286,35 @@ class Roamers < (Example rescue Gosu::Window)
 
     def draw_tower_info picked_tower_type, picked_tower_level
         setting = SETTING["tower"][picked_tower_type.to_s]
-        
+        x = 30
+        y = 440
+
         image = Gosu::Image.new(setting["level#{picked_tower_level}"]["image"])
-        image.draw(70, 370, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
-        x = 40
-        @info_font.draw("Tower name: #{setting["name"]}", x, 420, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        image.draw(x + 100, y + 40, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
+       
+        @info_font.draw("Tower name: #{setting["name"]}", x, y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         detail_setting = setting["level#{picked_tower_level}"]
-        @info_font.draw("Range: #{detail_setting["range"]}", x, 440, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Damage: #{detail_setting["damage"]}", x, 460, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Price: #{detail_setting["price"]}", x, 480, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Sell_price: #{detail_setting["price"]/2}", x, 500, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", x, 520, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Range: #{detail_setting["range"]}", x, y + 20, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Damage: #{detail_setting["damage"]}", x, y + 40, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Price: #{detail_setting["price"]}", x, y + 60, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Sell_price: #{detail_setting["price"]/2}", x, y + 80, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", x, y + 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
-    def draw_right_menu
-        draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
-        
-        @info_font.draw("TIME: #{@time}", WIDTH - SIDE_WIDTH + 70, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        # draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-        @group_font.draw("#{@fortress.name}", WIDTH - SIDE_WIDTH + 25, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        draw_line(WIDTH - SIDE_WIDTH + 20, 80, Gosu::Color::BLACK, WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-        
-        @info_font.draw("Health: #{@fortress.health}", WIDTH - SIDE_WIDTH + 30, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Money: #{@fortress.money}", WIDTH - SIDE_WIDTH + 30, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        
-        
-        start_at = 270
+    def draw_game_info
+        offset_left = WIDTH - 100
+        @info_font.draw("TIME: #{@time}", offset_left, 10, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+        draw_line(offset_left - 10, 25, Gosu::Color::WHITE, WIDTH, 25, Gosu::Color::WHITE, ZOrder::PLAYER, mode=:default)
+        @info_font.draw("Pokemons: #{@fortress.number_of_creeps}", offset_left, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+        draw_line(offset_left, 45, Gosu::Color::WHITE, WIDTH, 45, Gosu::Color::WHITE, ZOrder::PLAYER, mode=:default)
+        start_at = 50
         @fortress.wave["zombie"].each do |each| 
             name = SETTING["zombies"][each["type"]]["name"]
-            @info_font.draw("#{name}: #{each["count"]}%", WIDTH - SIDE_WIDTH + 50, start_at, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+            @info_font.draw("#{name}: #{each["count"]}%", offset_left, start_at, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
             img_loc = SETTING["zombies"][each["type"]]["tile_loc"]
-            @pokemon_tiles[(img_loc-1)*3].draw(WIDTH - SIDE_WIDTH + 150, start_at - 7, ZOrder::PLAYER, 0.5, 0.5)
+            @pokemon_tiles[(img_loc-1)*3].draw(offset_left + 80, start_at - 7, ZOrder::PLAYER, 0.5, 0.5)
             start_at += 20
         end
-       
-        @info_font.draw("Number of pokemons: #{@fortress.number_of_creeps}", WIDTH - SIDE_WIDTH + 30, 350, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("Level: #{@fortress.level}", WIDTH - SIDE_WIDTH + 75, 380, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-
-        draw_line(WIDTH - SIDE_WIDTH + 2* @ui_offset, 430, Gosu::Color::BLACK, WIDTH - @ui_offset, 430, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-
     end
 
     def draw_button button 
@@ -401,7 +397,7 @@ class Roamers < (Example rescue Gosu::Window)
                     if tile.obstacle_type == Obstacle_type::Tower 
                         start_x = x * TILE_OFFSET + SIDE_WIDTH
                         start_y = y * TILE_OFFSET
-                        draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color::GRAY, ZOrder::BACKGROUND)
+                        draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::BACKGROUND)
                         tile.draw_indicator if @show_tower_indicator
                     end
 
@@ -426,7 +422,7 @@ class Roamers < (Example rescue Gosu::Window)
         end
         
         for y in 0..@game_map.height do
-            draw_line(SIDE_WIDTH, y * TILE_OFFSET, color,  WIDTH - SIDE_WIDTH, y * TILE_OFFSET, color, ZOrder::BACKGROUND, mode=:default)
+            draw_line(SIDE_WIDTH, y * TILE_OFFSET, color,  WIDTH, y * TILE_OFFSET, color, ZOrder::BACKGROUND, mode=:default)
         end
     end
 
@@ -628,6 +624,7 @@ class Roamers < (Example rescue Gosu::Window)
     
     def button_handler
         Button.buttons.each do |button|
+            next if button.hidden?
             next if !area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
             case button.id
             when "start"
