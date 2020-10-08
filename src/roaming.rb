@@ -540,6 +540,17 @@ class Roamers < (Example rescue Gosu::Window)
         @fortress.health = SETTING["level"][@fortress.level.to_s]["health"]
         @fortress.money = SETTING["level"][@fortress.level.to_s]["money"]
 
+        # reset towers
+        @game_map.width.times.each do |x|
+            @game_map.height.times.each do |y|
+                if @game_map.tiles[x][y].obstacle_type == Obstacle_type::Tower
+                    @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
+                    puts "#{@game_map.tiles[x][y]}"
+                end
+            end
+          end
+        Tower.clear_towers
+
         @game_status = Game_status::Running
 
         @show_tower_indicator = false
