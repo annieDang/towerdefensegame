@@ -1,5 +1,5 @@
 {
-  "time_per_level": 50,
+  "time_per_level": 60,
   "obstacle": {
     "0": {
       "name": "house",
@@ -212,6 +212,7 @@
   },
   "level": {
     "1": {
+      "number_of_infected_land": 1,
       "health": 100,
       "money": 1000,
       "wave": "lv1",
@@ -219,17 +220,19 @@
       "towers": ["0", "1", "2"]
     },
     "2": {
+      "number_of_infected_land": 2,
       "health": 200,
       "money": 2000,
       "wave": "lv2",
-      "number_of_creeps": 10,
+      "number_of_creeps": 50,
       "towers": ["0", "1", "2"]
     },
     "3": {
+      "number_of_infected_land": 3,
       "health": 300,
       "money": 3000,
       "wave": "lv3",
-      "number_of_creeps": 20,
+      "number_of_creeps": 100,
       "towers": ["0", "1", "2"]
     }
   }

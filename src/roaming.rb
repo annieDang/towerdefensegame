@@ -131,23 +131,22 @@ class Roamers < (Example rescue Gosu::Window)
         start_game
 
         @notification = nil
-        @notification_start_time = Gosu.milliseconds
+        @notification_end_time = Gosu.milliseconds
 
         @collision_time = Gosu.milliseconds
     end
 
     def start_game
-        @start_health = @fortress.health
-
         @song = Gosu::Song.new("media/sound/background_normal.mp3") 
         @song.volume = 0.2
-        # @song.play(true)
+        @song.play(true)
 
         @game_status = Game_status::Running
 
         @start_game = Gosu.milliseconds
         @time = 0
         @show_tower_indicator = false
+        
     end
 
     def get_shortest_path(bad_land)
@@ -173,19 +172,19 @@ class Roamers < (Example rescue Gosu::Window)
         @upgrade_btn.set_hidden(true)
         @sell_btn.set_hidden(true)
 
-        Button.new((WIDTH - SIDE_WIDTH + 20), 180, 70, 30, "Pause", "start")
-        Button.new((WIDTH - SIDE_WIDTH + 110), 180, 70, 30, "Reset", "reset")
+        Button.new((WIDTH - SIDE_WIDTH + 20), 220, 70, 30, "Pause", "start")
+        Button.new((WIDTH - SIDE_WIDTH + 110), 220, 70, 30, "Reset", "reset")
         
-        start_y = 350
+        start_y = 450
         Button.new((WIDTH - SIDE_WIDTH + 20), start_y, 160, 30, "Load a map", "load_map")
         Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 50, 160, 30, "Create random map", "creat_random_map")
         Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 100, 160, 30, "Show tower indicator", "show_tower_indicator")
         Button.new((WIDTH - SIDE_WIDTH + 20), start_y + 150, 160, 30, "More zombies", "more_zombies")
     end
 
-    def make_notification info
+    def make_notification(info, time_to_show = 1000)
         @notification = info
-        @notification_start_time = Gosu.milliseconds
+        @notification_end_time = Gosu.milliseconds + time_to_show
     end
 
     def draw
@@ -205,10 +204,7 @@ class Roamers < (Example rescue Gosu::Window)
         dragging_tower
 
         # show collision
-        if Gosu.milliseconds - @collision_time > 1000
-            @collision_time = Gosu.milliseconds
-            collision
-        end
+        collision
 
         # game status
         draw_status
@@ -258,7 +254,7 @@ class Roamers < (Example rescue Gosu::Window)
 
     def draw_left_menu
         draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
-        @group_font.draw("<b><c=00008b>STORE</c></b>", 65, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @group_font.draw("STORE", 65, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, 80, Gosu::Color::BLACK, SIDE_WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
         # draw_tower_list
@@ -270,7 +266,7 @@ class Roamers < (Example rescue Gosu::Window)
             start_at += 60
         end
 
-        @group_font.draw("<b><c=00008b>INFORMATION</c></b>", 35, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @group_font.draw("INFORMATION", 35, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, 345, Gosu::Color::BLACK, SIDE_WIDTH - 20, 345, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
         if @picked_tower
@@ -300,16 +296,36 @@ class Roamers < (Example rescue Gosu::Window)
     def draw_right_menu
         draw_rect(WIDTH - SIDE_WIDTH + @ui_offset, @ui_offset, WIDTH - @ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
         
-        @info_font.draw("<b><c=00008b>TIME: #{@time}</c></b>", WIDTH - SIDE_WIDTH + 70, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("TIME: #{@time}", WIDTH - SIDE_WIDTH + 70, 30, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         # draw_line(WIDTH - SIDE_WIDTH + @ui_offset, HEIGHT/3, Gosu::Color::BLACK, WIDTH - @ui_offset, HEIGHT/3, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
-        @group_font.draw("<b><u><c=00008b>#{@fortress.name}</c></u></b>", WIDTH - SIDE_WIDTH + 25, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @group_font.draw("#{@fortress.name}", WIDTH - SIDE_WIDTH + 25, 50, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(WIDTH - SIDE_WIDTH + 20, 80, Gosu::Color::BLACK, WIDTH - 20, 80, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
-        @info_font.draw("<b><c=00008b>Health: #{@fortress.health}</c></b>", WIDTH - SIDE_WIDTH + 50, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Money: #{@fortress.money}</c></b>", WIDTH - SIDE_WIDTH + 50, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw("<b><c=00008b>Level: #{@fortress.level}</c></b>", WIDTH - SIDE_WIDTH + 50, 140, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Health: #{@fortress.health}", WIDTH - SIDE_WIDTH + 30, 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Money: #{@fortress.money}", WIDTH - SIDE_WIDTH + 30, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         
-        draw_line(WIDTH - SIDE_WIDTH + 2* @ui_offset, 300, Gosu::Color::BLACK, WIDTH - @ui_offset, 300, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
+        
+        
+        start_at = 260
+        @fortress.wave["zombie"].each do |each| 
+            name = SETTING["zombies"][each["type"]]["name"]
+            @info_font.draw("#{name}: #{each["count"]}%", WIDTH - SIDE_WIDTH + 50, start_at, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+            @image = Gosu::Image.new(Circle.new(SETTING["zombies"][each["type"]]["radius"]/2))
+            
+            color = Gosu::Color::BLACK
+            case SETTING["zombies"][each["type"]]["color"]
+            when "red"
+                color = Gosu::Color::RED
+            when "yellow"
+                color = Gosu::Color::YELLOW
+            end
+            @image.draw(WIDTH - SIDE_WIDTH + 150, start_at, ZOrder::PLAYER, 1, 1, color)
+            start_at += 20
+        end
+        @info_font.draw("Number of Zombies: #{@fortress.number_of_creeps}", WIDTH - SIDE_WIDTH + 30, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+        @info_font.draw("Level: #{@fortress.level}", WIDTH - SIDE_WIDTH + 75, 380, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+
+        draw_line(WIDTH - SIDE_WIDTH + 2* @ui_offset, 430, Gosu::Color::BLACK, WIDTH - @ui_offset, 430, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
     end
 
@@ -460,30 +476,34 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def update
-        @notification = nil if is_notification_running?
+        @notification = nil if showing_notification?
         
         return if @game_status == Game_status::Game_over || @game_status == Game_status::Won
-
-        if @game_status == Game_status::Next_level and is_notification_running?
-            reset
-            @fortress.next_level
-            return
-        end
-
-        if @fortress.level >=3
-            @game_status = Game_status::Won
-            return
-        end
 
         if @fortress.health <= 0
             @game_status = Game_status::Game_over
             return 
         end
 
+        if @game_status == Game_status::Next_level and !showing_notification?
+            if @fortress.level >=3
+                @fortress.level = 3
+                @game_status = Game_status::Won
+                return
+            end
+
+            @fortress.next_level
+            while (@infected_lands.length < @fortress.number_of_infected_land)
+                create_random_infected_land
+            end
+            reset
+            return
+        end
+
         if @game_status == Game_status::Running
             @time = (Gosu.milliseconds - @start_game)/1000 if @game_status == Game_status::Running
             if @time >= SETTING["time_per_level"]
-                @notification = "Next level"
+                make_notification("Next Levlel", 2000)
                 @game_status = Game_status::Next_level
                 return
             end
@@ -505,24 +525,25 @@ class Roamers < (Example rescue Gosu::Window)
 
     end
 
-    def is_notification_running?
-        (Gosu.milliseconds - @notification_start_time) > 500
+    def showing_notification?
+        (Gosu.milliseconds - @notification_end_time) > 0
     end
 
     def needs_cursor?; true; 
     end
 
     def reset
-        regenerate_terrain(@game_map)
+        @start_game = Gosu.milliseconds
+        @time = 0
+        @creeps =[]
 
-        # reset player's data
-        @fortress.level = 1
-        @fortress.load_setting
+        @fortress.health = SETTING["level"][@fortress.level.to_s]["health"]
+        @fortress.money = SETTING["level"][@fortress.level.to_s]["money"]
 
-        @infected_land = Array.new
-        create_random_infected_land
+        @game_status = Game_status::Running
 
-        reset_params
+        @show_tower_indicator = false
+
     end
 
     def start_pause
@@ -549,8 +570,10 @@ class Roamers < (Example rescue Gosu::Window)
         end
 
         tower = @game_map.tiles[@picked_tower.x][@picked_tower.y]
-        tower.upgrade
-        @fortress.money -= @picked_tower.get_upgrade_price 
+        if(tower.obstacle_type == Obstacle_type::Tower)
+            tower.upgrade
+            @fortress.money -= @picked_tower.get_upgrade_price 
+        end
     end
 
     def sell
@@ -565,12 +588,12 @@ class Roamers < (Example rescue Gosu::Window)
         rand_x = rand(@game_map.width - 1)
         rand_y = rand(@game_map.height - 1)
         
-        while (rand_x - @fortress.x).abs >=10 and (rand_y - @fortress.y).abs >=10
+        while (rand_x - @fortress.x).abs <5 and (rand_y - @fortress.y).abs <5
             rand_x = rand(@game_map.width - 1)
             rand_y = rand(@game_map.height - 1)
         end
         
-        bad_land = Infected_land.new(Obstacle_type::Infected_forest, 9, 2) 
+        bad_land = Infected_land.new(Obstacle_type::Infected_forest, rand_x, rand_y) 
         add_infected_land(bad_land,@game_map)
         bad_land.path = get_shortest_path(bad_land)
         @infected_lands << bad_land
@@ -585,16 +608,10 @@ class Roamers < (Example rescue Gosu::Window)
         create_random_infected_land()
 
         add_Hq(@fortress,@game_map)
-        reset_params
-    end
-
-    def reset_params
+        
         @start_game = Gosu.milliseconds
         @time = 0
         @creeps =[]
-
-        # reset game status
-        start_game
 
         # reset towers
         Tower.clear_towers

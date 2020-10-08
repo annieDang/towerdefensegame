@@ -1,5 +1,5 @@
 class Fortress < Obstacle
-    attr_accessor :name, :x, :y, :image, :money, :wave, :height, :width, :level, :health, :number_of_creeps
+    attr_accessor :name, :x, :y, :image, :money, :wave, :height, :width, :level, :health, :number_of_creeps, :number_of_infected_land
     def initialize(name, x, y, type, width, height)
         super(Obstacle_type::HQ, x, y)
         @name = name
@@ -21,9 +21,11 @@ class Fortress < Obstacle
         @money = setting["money"]
         @wave = SETTING["wave"][setting["wave"]]
         @number_of_creeps = setting["number_of_creeps"]
+        @number_of_infected_land = setting["number_of_infected_land"]
     end
 
     def next_level
         @level += 1
+        load_setting
     end
 end
