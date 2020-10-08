@@ -26,29 +26,35 @@
     "0": {
       "name": "Melee",
       "damage": 5,
-      "speed": 4,
+      "speed": 2,
       "profit": 100,
       "health": 50,
-      "radius": 10,
-      "color": "black"
+      "size": 10,
+      "color": "black",
+      "image_tile_dir": "./media/pokemons.png",
+      "tile_loc": 1
     },
     "1": {
       "name": "Siege",
       "damage": 8,
-      "speed": 8,
+      "speed": 4,
       "profit": 200,
       "health": 80,
-      "radius": 12,
-      "color": "red"
+      "size": 12,
+      "color": "red",
+      "image_tile_dir": "./media/pokemons.png",
+      "tile_loc": 2
     },
     "2": {
       "name": "Super",
       "damage": 3,
-      "speed": 14,
+      "speed": 6,
       "profit": 300,
       "health": 500,
-      "radius": 14,
-      "color": "yellow"
+      "size": 14,
+      "color": "yellow",
+      "image_tile_dir": "./media/pokemons.png",
+      "tile_loc": 4
     }
   },
   "tower": {
@@ -216,7 +222,7 @@
       "health": 100,
       "money": 1000,
       "wave": "lv1",
-      "number_of_creeps": 15,
+      "number_of_creeps": 5,
       "towers": ["0", "1", "2"]
     },
     "2": {
@@ -224,7 +230,7 @@
       "health": 200,
       "money": 2000,
       "wave": "lv2",
-      "number_of_creeps": 50,
+      "number_of_creeps": 8,
       "towers": ["0", "1", "2"]
     },
     "3": {
@@ -232,7 +238,7 @@
       "health": 300,
       "money": 3000,
       "wave": "lv3",
-      "number_of_creeps": 100,
+      "number_of_creeps": 12,
       "towers": ["0", "1", "2"]
     }
   }

@@ -5,7 +5,6 @@ require_relative 'find_path'
 require_relative 'setting'
 
 require_relative 'sprite/creep'
-require_relative 'sprite/circle'
 
 require_relative 'object/obstacle'
 require_relative 'object/fortress'
@@ -105,12 +104,13 @@ class Roamers < (Example rescue Gosu::Window)
         self.caption = "Roamers"
         @ground = Gosu::Image.new("media/ground.jpeg")
         @circle = Gosu::Image.new("media/circle.png")
+        @pokemon_tiles = Gosu::Image.load_tiles("./media/pokemons.png", 32, 32)
 
         # generate a random map full with obstacles 
         # and then add hq, infected land
         @game_map = setup_game_map 
         puts "Map is generated width #{@game_map.width} heigh #{@game_map.height}"
-        @fortress = Fortress.new("LAST FORTRESS", 2, 9, Obstacle_type::HQ, 2, 2)
+        @fortress = Fortress.new("MAD POKEMONS", 2, 9, Obstacle_type::HQ, 2, 2)
        
         @infected_lands = Array.new
         bad_land = Infected_land.new(Obstacle_type::Infected_forest, 9, 2) 
@@ -305,24 +305,16 @@ class Roamers < (Example rescue Gosu::Window)
         @info_font.draw("Money: #{@fortress.money}", WIDTH - SIDE_WIDTH + 30, 120, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         
         
-        
-        start_at = 260
+        start_at = 270
         @fortress.wave["zombie"].each do |each| 
             name = SETTING["zombies"][each["type"]]["name"]
             @info_font.draw("#{name}: #{each["count"]}%", WIDTH - SIDE_WIDTH + 50, start_at, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
-            @image = Gosu::Image.new(Circle.new(SETTING["zombies"][each["type"]]["radius"]/2))
-            
-            color = Gosu::Color::BLACK
-            case SETTING["zombies"][each["type"]]["color"]
-            when "red"
-                color = Gosu::Color::RED
-            when "yellow"
-                color = Gosu::Color::YELLOW
-            end
-            @image.draw(WIDTH - SIDE_WIDTH + 150, start_at, ZOrder::PLAYER, 1, 1, color)
+            img_loc = SETTING["zombies"][each["type"]]["tile_loc"]
+            @pokemon_tiles[(img_loc-1)*3].draw(WIDTH - SIDE_WIDTH + 150, start_at - 7, ZOrder::PLAYER, 0.5, 0.5)
             start_at += 20
         end
-        @info_font.draw("Number of Zombies: #{@fortress.number_of_creeps}", WIDTH - SIDE_WIDTH + 30, 320, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+       
+        @info_font.draw("Number of pokemons: #{@fortress.number_of_creeps}", WIDTH - SIDE_WIDTH + 30, 350, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("Level: #{@fortress.level}", WIDTH - SIDE_WIDTH + 75, 380, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
 
         draw_line(WIDTH - SIDE_WIDTH + 2* @ui_offset, 430, Gosu::Color::BLACK, WIDTH - @ui_offset, 430, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
@@ -441,16 +433,18 @@ class Roamers < (Example rescue Gosu::Window)
     def collision
         Tower.towers().each do |tower|
             @creeps.each do |creep|
-                if tower.collision?(creep)
+                if tower.collision?(creep) and !creep.die?
                     tower_x = tower.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
                     tower_y = tower.y * TILE_OFFSET + TILE_OFFSET/2
                     
                     case tower.tower_type
                     when Tower_type::Range
-                        draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
-                        creep.health -= tower.damage 
+                        # draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
+                        creep.health -= tower.damage
+                        creep.kill! if(creep.health <= 0)
+
                     when Tower_type::Effect
-                        draw_line(tower_x, tower_y, Gosu::Color::BLUE, creep.x, creep.y, Gosu::Color::BLUE, ZOrder::PLAYER, mode=:default)
+                        # draw_line(tower_x, tower_y, Gosu::Color::BLUE, creep.x, creep.y, Gosu::Color::BLUE, ZOrder::PLAYER, mode=:default)
                         creep.speed = creep.speed - tower.damage  < 1? 1 : creep.speed - tower.damage
                     end
                     
@@ -511,12 +505,12 @@ class Roamers < (Example rescue Gosu::Window)
             # move them
             @creeps.each { |creep| creep.move @fortress}
             
-            # kill the died
-            @creeps.each { |creep| @fortress.money += creep.profit if creep.health <0}
-            @creeps.each { |creep| creep.dead = true if creep.health <0}
-
             # remove the died 
-            @creeps.reject! {|creep| creep.dead }
+            @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}
+            @creeps.reject! {|creep| creep.bury? }
+
+            # kill the died
+            @creeps.each { |creep| creep.kill! if creep.health <0}
 
             if(@creeps.length < @fortress.number_of_creeps)
                 @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 500)
@@ -529,7 +523,8 @@ class Roamers < (Example rescue Gosu::Window)
         (Gosu.milliseconds - @notification_end_time) > 0
     end
 
-    def needs_cursor?; true; 
+    def needs_cursor? 
+        true 
     end
 
     def reset
@@ -545,7 +540,6 @@ class Roamers < (Example rescue Gosu::Window)
             @game_map.height.times.each do |y|
                 if @game_map.tiles[x][y].obstacle_type == Obstacle_type::Tower
                     @game_map.tiles[x][y] = Obstacle.new(Obstacle_type::Empty, x, y)
-                    puts "#{@game_map.tiles[x][y]}"
                 end
             end
           end
