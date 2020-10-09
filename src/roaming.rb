@@ -22,7 +22,7 @@ class GameMap
 end
 
 def regenerate_terrain(game_map)
-    game_map.width = (WIDTH - SIDE_WIDTH * 2)/TILE_OFFSET
+    game_map.width = (WIDTH - SIDE_WIDTH)/TILE_OFFSET
     game_map.height = HEIGHT/TILE_OFFSET
 
     game_map.tiles = Array.new(game_map.width) do |x|
@@ -159,10 +159,10 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def create_buttons
-        Button.new(20, 70, 70, 30, "Pause", "start")
-        Button.new(110, 70, 70, 30, "Reset", "reset")
+        Button.new(20, 70, 70, 40, "Pause", "start")
+        Button.new(110, 70, 70, 40, "Reset", "reset")
 
-        start_at =  210
+        start_at =  170
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             btn = Button.new(20, start_at, 150, 40, tower_setting["name"], "tower_#{tower_type}")
@@ -170,17 +170,19 @@ class Roamers < (Example rescue Gosu::Window)
             start_at += 60
         end
         
-        @upgrade_btn = Button.new(10, start_at + 180, 80, 30, "Upgrade", "upgrade")
-        @sell_btn = Button.new(110, start_at + 180, 80, 30, "Sell", "sell")
+        @upgrade_btn = Button.new(10, start_at + 150, 80, 40, "Upgrade", "upgrade")
+        @sell_btn = Button.new(110, start_at + 150, 80, 40, "Sell", "sell")
         @upgrade_btn.set_hidden(true)
         @sell_btn.set_hidden(true)
 
-        start_y = 610
-        step = 40
-        Button.new(20, start_y, 160, 30, "Load a map", "load_map")
-        Button.new(20, start_y + step, 160, 30, "Create random map", "creat_random_map")
-        Button.new(20, start_y + step * 2, 160, 30, "Show tower indicator", "show_tower_indicator")
-        Button.new(20, start_y + step * 3, 160, 30, "More zombies", "more_zombies")
+        start_y = 580
+        step = 45
+        width = 40
+        height = 160
+        Button.new(20, start_y, height, width, "Load a map", "load_map")
+        Button.new(20, start_y + step, height, width, "Create random map", "creat_random_map")
+        Button.new(20, start_y + step * 2, height, width, "Show tower indicator", "show_tower_indicator")
+        Button.new(20, start_y + step * 3, height, width, "Add infected land", "more_zombies")
     end
 
     def make_notification(info, time_to_show = 1000)
@@ -234,8 +236,8 @@ class Roamers < (Example rescue Gosu::Window)
         if @notification
             height = @status_font.height
             width = @status_font.text_width(@notification, scale_x = 1)
-            draw_rect(WIDTH/2 - width/2 - 50, HEIGHT/2 - height/2 - 10, width + 100, height + 20, Gosu::Color::BLACK)
-            @status_font.draw(@notification, WIDTH/2 - width/2,  HEIGHT/2 - height/2, ZOrder::BACKGROUND, 1.0, 1.0, Gosu::Color::WHITE)
+            draw_rect((WIDTH - SIDE_WIDTH)/2 - width/2 - 50 + SIDE_WIDTH, HEIGHT/2 - height/2 - 10, width + 100, height + 20, Gosu::Color::BLACK)
+            @status_font.draw(@notification, (WIDTH - SIDE_WIDTH)/2  - width/2 + SIDE_WIDTH,  HEIGHT/2 - height/2, ZOrder::BACKGROUND, 1.0, 1.0, Gosu::Color::WHITE)
         end
 
     end
@@ -259,19 +261,19 @@ class Roamers < (Example rescue Gosu::Window)
         @group_font.draw("#{@fortress.name}", 30, home_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, home_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, home_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
-        store_lable_y = 150
+        store_lable_y = 120
         @group_font.draw("STORE", 65, store_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, store_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, store_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
         # draw_tower_list
-        start_at = 200
+        start_at = store_lable_y + 30
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             @image = Gosu::Image.new(tower_setting["level1"]["image"])
             @image.draw(120, start_at, ZOrder::UI, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
             start_at += 60
         end
-        information_lable_y = 400
+        information_lable_y = store_lable_y + 220
         @group_font.draw("INFORMATION", 35, information_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, information_lable_y+25, Gosu::Color::BLACK, SIDE_WIDTH - 20, information_lable_y +25, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
         
@@ -287,7 +289,7 @@ class Roamers < (Example rescue Gosu::Window)
     def draw_tower_info picked_tower_type, picked_tower_level
         setting = SETTING["tower"][picked_tower_type.to_s]
         x = 30
-        y = 440
+        y = 380
 
         image = Gosu::Image.new(setting["level#{picked_tower_level}"]["image"])
         image.draw(x + 100, y + 40, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
@@ -312,9 +314,11 @@ class Roamers < (Example rescue Gosu::Window)
             name = SETTING["zombies"][each["type"]]["name"]
             @info_font.draw("#{name}: #{each["count"]}%", offset_left, start_at, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
             img_loc = SETTING["zombies"][each["type"]]["tile_loc"]
-            @pokemon_tiles[(img_loc-1)*3].draw(offset_left + 80, start_at - 7, ZOrder::PLAYER, 0.5, 0.5)
-            start_at += 20
+            @pokemon_tiles[(img_loc-1)*3].draw(offset_left + 70, start_at - 15, ZOrder::PLAYER, 1, 1)
+            start_at += 25
         end
+
+        @info_font.draw("#{@fortress.money} X ", (SIDE_WIDTH + @fortress.x * TILE_OFFSET + TILE_OFFSET/2), @fortress.y * TILE_OFFSET + TILE_OFFSET + TILE_OFFSET/2,  ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
     end
 
     def draw_button button 
@@ -504,6 +508,7 @@ class Roamers < (Example rescue Gosu::Window)
             # remove the died 
             @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}
             @creeps.reject! {|creep| creep.bury? }
+            @creeps.reject! {|creep| creep.exploded_done? }
 
             # kill the died
             @creeps.each { |creep| creep.kill! if creep.health <0}

@@ -16,7 +16,8 @@ class Creep
         @size = zombie_setting["size"]
         @x,@y = cal_pos
 
-        @died_image = Gosu::Image.new("./media/boom.png")
+        @exploxed_image = Gosu::Image.new("./media/boom.png")
+        @blood_image_tiles = Gosu::Image.load_tiles("./media/blood.png", 472, 428)
 
         load_tiles(zombie_setting)
         
@@ -27,10 +28,12 @@ class Creep
 
         @current_tile_indx = 0
         @current_move = nil
-
-        @next_tile_x, @next_tile_y = next_tile(@moves.shift)
+        @exploded = false
+        @exploded_time = nil
         @die = false
         @died_time = nil
+
+        @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         
     end
 
@@ -135,7 +138,7 @@ class Creep
             # attack the fortress
             if next_move.nil?
                 fortress.health = fortress.health - @damage < 0? 0 : fortress.health - @damage
-                kill!
+                explode!
             else
                 @next_tile_x, @next_tile_y = next_tile(next_move)
             end
@@ -148,8 +151,14 @@ class Creep
 
     def spawn
         if(die? and !bury?)
-            time_died = Gosu.milliseconds - @died_time
-            @died_image.draw(@x, @y, ZOrder::PLAYER, 0.5 - time_died/1000.0, 0.5 - time_died/1000.0)
+            tile_indx = (Gosu.milliseconds - @died_time.to_i)/(1000/@blood_image_tiles.length) - 1
+            tile_img = @blood_image_tiles[tile_indx]
+            tile_img.draw(@x, @y, 4, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
+            return
+        end
+        if(exploded? and !exploded_done?)
+            ratio = (Gosu.milliseconds - @exploded_time.to_i)/2000.0
+            @exploxed_image.draw(@x, @y, ZOrder::PLAYER, ratio, ratio)
             return
         end
 
@@ -168,7 +177,20 @@ class Creep
     end
 
     def bury?
-        @die and (Gosu.milliseconds - @died_time > 500)
+        die? and (Gosu.milliseconds - @died_time > 500)
+    end
+
+    def explode!
+        @exploded = true
+        @exploded_time = Gosu.milliseconds if !@exploded_time
+    end
+    # Checks whether this sprite should be deleted
+    def exploded?
+        @exploded
+    end
+
+    def exploded_done?
+        exploded? and (Gosu.milliseconds - @exploded_time > 500)
     end
     
 end

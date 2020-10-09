@@ -7,12 +7,14 @@ class Fortress < Obstacle
         @height = height
         @level = 1
         load_setting 
+        @coin_img = Gosu::Image.new("./media/coin.png")
     end
 
     def draw 
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
         @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * @width * 1.0) /@image.width,  (TILE_OFFSET * @height * 1.0) /@image.height)
+        @coin_img.draw((start_x + TILE_OFFSET + TILE_OFFSET/2), start_y + TILE_OFFSET + TILE_OFFSET/2, ZOrder::BACKGROUND, 5.0/@image.width,  5.0/@image.height)
     end
 
     def load_setting
