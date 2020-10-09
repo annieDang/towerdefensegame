@@ -233,8 +233,8 @@ class Roamers < (Example rescue Gosu::Window)
     def draw_game_status text
         height = @status_font.height
         width = @status_font.text_width(text, scale_x = 1)
-        draw_rect(WIDTH/2 - width/2 - 50, HEIGHT/2 - height/2 - 10, width + 100, height + 20, Gosu::Color::GRAY)
-        @status_font.draw(text, WIDTH/2 - width/2,  HEIGHT/2 - height/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
+        draw_rect((WIDTH - SIDE_WIDTH)/2 - width/2 - 50 + SIDE_WIDTH, HEIGHT/2 - height/2 - 10, width + 100, height + 20, Gosu::Color::GRAY)
+        @status_font.draw(text, (WIDTH - SIDE_WIDTH)/2 - width/2 + SIDE_WIDTH,  HEIGHT/2 - height/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
     end
 
     def draw_status
@@ -505,11 +505,7 @@ class Roamers < (Example rescue Gosu::Window)
             end
 
             # move them
-            count = 0
-            @creeps.each do |creep| 
-                creep.move @fortress
-                return if is_game_over?
-            end
+            @creeps.each { |creep| creep.move @fortress }
 
             # remove the died 
             @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}

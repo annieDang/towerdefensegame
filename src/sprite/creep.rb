@@ -1,5 +1,5 @@
 class Creep
-    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :size, :die, :path, :grid_x, :grid_y, :mapping_map, :image_tiles
+    attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :die, :path, :grid_x, :grid_y, :mapping_map, :image_tiles
     def initialize(type, grid_x, grid_y, path, mapping_map)
         @type = type;
         @grid_x = grid_x
@@ -13,9 +13,6 @@ class Creep
         @health = zombie_setting["health"]
         @full_health = zombie_setting["health"]
 
-        # characteristic
-        @size = zombie_setting["size"]
-        @x,@y = cal_pos
 
         @exploxed_image = Gosu::Image.new("./media/boom.png")
         @blood_image_tiles = Gosu::Image.load_tiles("./media/blood.png", 472, 428)
@@ -33,6 +30,9 @@ class Creep
         @exploded_time = nil
         @die = false
         @died_time = nil
+
+        # characteristic
+        @x,@y = cal_pos
 
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         
@@ -54,8 +54,10 @@ class Creep
     end
 
     def cal_pos
-        x = SIDE_WIDTH + @grid_x * TILE_OFFSET + TILE_OFFSET/2 - @size/2
-        y = @grid_y * TILE_OFFSET + TILE_OFFSET/2 - @size/2
+        width_tile = @image_tiles[@current_tile_indx].width
+        height_tile = @image_tiles[@current_tile_indx].height
+        x = SIDE_WIDTH + @grid_x * TILE_OFFSET +  (TILE_OFFSET/2 - width_tile/2)
+        y = @grid_y * TILE_OFFSET + (TILE_OFFSET/2 - height_tile/2)
         [x,y]
     end
 
@@ -164,9 +166,9 @@ class Creep
             return
         end
 
-        @image_tiles[@current_tile_indx].draw(@x - @size/2, @y - @size/2, ZOrder::PLAYER)
-        $window.draw_rect(@x- @size/2 , @y - @size/2, @size,2, Gosu::Color::BLACK, ZOrder::BACKGROUND)
-        draw_health_bar(@health, @full_health, @x - @size/2, @y - @size/2, @image_tiles[@current_tile_indx].width ,2)
+        @image_tiles[@current_tile_indx].draw(@x, @y, ZOrder::PLAYER)
+        $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+        draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2)
     end
 
     # Removes the creep from its list
