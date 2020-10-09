@@ -1,7 +1,7 @@
 class Button
     @@buttons = []
     @@draw_fun = nil
-    attr_accessor :x, :y, :width, :height, :label, :id, :hidden, :left_align
+    attr_accessor :x, :y, :width, :height, :label, :id, :hidden, :left_align, :color, :mouse_over_color
     def initialize(x, y, width, height, label, id)
         @x = x
         @y = y
@@ -11,7 +11,6 @@ class Button
         @id = id
 
         @hidden = false
-
         @@buttons << self
     end
 

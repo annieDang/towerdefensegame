@@ -173,10 +173,10 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def create_buttons
-        Button.new(20, 70, 70, 40, "Pause", "start")
-        Button.new(110, 70, 70, 40, "Reset", "reset")
+        Button.new(20, 90, 70, 40, "Pause", "start")
+        Button.new(110, 90, 70, 40, "Reset", "reset")
 
-        start_at =  170
+        start_at =  200
         SETTING["level"][@fortress.level.to_s]["towers"].each do |tower_type|
             tower_setting = SETTING["tower"][tower_type.to_s]
             btn = Button.new(20, start_at, 150, 40, tower_setting["name"], "tower_#{tower_type}")
@@ -184,19 +184,20 @@ class Roamers < (Example rescue Gosu::Window)
             start_at += 60
         end
         
-        @upgrade_btn = Button.new(10, start_at + 150, 80, 40, "Upgrade", "upgrade")
-        @sell_btn = Button.new(110, start_at + 150, 80, 40, "Sell", "sell")
+        @upgrade_btn = Button.new(10, start_at + 170, 80, 40, "Upgrade", "upgrade")
+        @sell_btn = Button.new(110, start_at + 170, 80, 40, "Sell", "sell")
         @upgrade_btn.set_hidden(true)
         @sell_btn.set_hidden(true)
 
-        start_y = 580
-        step = 45
-        width = 40
-        height = 160
-        Button.new(20, start_y, height, width, "Load a map", "load_map")
-        Button.new(20, start_y + step, height, width, "Create random map", "creat_random_map")
-        Button.new(20, start_y + step * 2, height, width, "Show tower indicator", "show_tower_indicator")
-        Button.new(20, start_y + step * 3, height, width, "Add infected land", "more_zombies")
+        start_y = 650
+        start_x = 5
+        step = 50
+        width = 90
+        height = 40
+        Button.new(start_x, start_y, width, height, "Graph test", "load_map")
+        Button.new(start_x + 100, start_y, width, height, "Random map", "creat_random_map")
+        Button.new(start_x, start_y + step, width, height, "Indicator", "show_tower_indicator")
+        Button.new(start_x + 100, start_y+ step, width, height, "Add land", "more_zombies")
     end
 
     def make_notification(info, time_to_show = 1000)
@@ -263,12 +264,11 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def draw_left_menu
-        draw_rect(@ui_offset, @ui_offset, SIDE_WIDTH - 2*@ui_offset, HEIGHT - 2*@ui_offset, Gosu::Color::WHITE)
-        home_lable_y = 20
+        home_lable_y = 30
         @group_font.draw("#{@fortress.name}", 30, home_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, home_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, home_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
-        store_lable_y = 120
+        store_lable_y = 150
         @group_font.draw("STORE", 65, store_lable_y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         draw_line(20, store_lable_y + 30, Gosu::Color::BLACK, SIDE_WIDTH - 20, store_lable_y + 30, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
 
@@ -295,11 +295,11 @@ class Roamers < (Example rescue Gosu::Window)
 
     def draw_tower_info picked_tower_type, picked_tower_level
         setting = SETTING["tower"][picked_tower_type.to_s]
-        x = 30
-        y = 380
+        x = 10
+        y = 420
 
         image = Gosu::Image.new(setting["level#{picked_tower_level}"]["image"])
-        image.draw(x + 100, y + 40, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
+        image.draw(x + 80, y + 40, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /image.width,  (TILE_OFFSET * 1.0) /image.height)
        
         @info_font.draw("Tower name: #{setting["name"]}", x, y, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         detail_setting = setting["level#{picked_tower_level}"]
@@ -308,6 +308,8 @@ class Roamers < (Example rescue Gosu::Window)
         @info_font.draw("Price: #{detail_setting["price"]}", x, y + 60, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("Sell_price: #{detail_setting["price"]/2}", x, y + 80, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
         @info_font.draw("Cool down time: #{detail_setting["cool_down"]}", x, y + 100, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+
+        draw_line(20, y + 180, Gosu::Color::BLACK, SIDE_WIDTH - 20, y + 180, Gosu::Color::BLACK, ZOrder::PLAYER, mode=:default)
     end
 
     def draw_game_info
@@ -328,17 +330,17 @@ class Roamers < (Example rescue Gosu::Window)
     end
 
     def draw_button button 
-        color = Gosu::Color::GRAY
+        color = button.color
         color = Gosu::Color::BLUE if area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
-        draw_rect(button.x, button.y, button.width, button.height, color)
+        draw_rect(button.x, button.y, button.width, button.height, color || Gosu::Color.new(107,106,76))
         
         width = @button_font.text_width(button.label, scale_x = 1)
         height = @button_font.height
 
         if button.left_align
-            @button_font.draw(button.label, button.x + 20, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+            @button_font.draw(button.label, button.x + 20, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
         else
-            @button_font.draw(button.label, button.x + (button.width - width)/2, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+            @button_font.draw(button.label, button.x + (button.width - width)/2, button.y + (button.height - height)/2, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
         end
     end
 
@@ -627,6 +629,7 @@ class Roamers < (Example rescue Gosu::Window)
 
         add_Hq(@fortress,@game_map)
         
+        @picked_tower = nil
         @start_game = Gosu.milliseconds
         @time = 0
         @creeps =[]
@@ -651,8 +654,10 @@ class Roamers < (Example rescue Gosu::Window)
             when "reset"
                 reset
             when "upgrade"
+                return if !@picked_tower
                 upgrade
             when "sell"
+                return if !@picked_tower
                 sell
             when "load_map"
 
