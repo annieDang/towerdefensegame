@@ -15,7 +15,7 @@ require_relative 'object/fortress'
 require_relative 'object/tower'
 require_relative 'object/infected_land'
 
-WIDTH, HEIGHT = 1024, 768
+WIDTH, HEIGHT = 1016, 768
 SIDE_WIDTH = 200
 TILE_OFFSET = 48
 
