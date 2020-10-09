@@ -1,16 +1,19 @@
 require 'rubygems'
 require 'gosu'
 require 'json'
-require_relative 'find_path'
+
 require_relative 'setting'
 
 require_relative 'sprite/creep'
+
+require_relative 'utils/button'
+require_relative 'utils/find_path'
+require_relative 'utils/health_bar'
 
 require_relative 'object/obstacle'
 require_relative 'object/fortress'
 require_relative 'object/tower'
 require_relative 'object/infected_land'
-require_relative 'button'
 
 WIDTH, HEIGHT = 1024, 768
 SIDE_WIDTH = 200
@@ -96,10 +99,10 @@ def area_clicked(leftX, topY, rightX, bottomY)
     end
 end
 
-
 class Roamers < (Example rescue Gosu::Window)
     def initialize
         super WIDTH, HEIGHT
+        $window = self
 
         self.caption = "Roamers"
         @ground = Gosu::Image.new("media/ground.jpeg")
@@ -134,6 +137,9 @@ class Roamers < (Example rescue Gosu::Window)
         @notification_end_time = Gosu.milliseconds
 
         @collision_time = Gosu.milliseconds
+
+        create_fonts()
+        
     end
 
     def start_game
@@ -147,6 +153,14 @@ class Roamers < (Example rescue Gosu::Window)
         @time = 0
         @show_tower_indicator = false
         
+    end
+
+    def create_fonts
+        @group_font = Gosu::Font.new(20)
+        @status_font = Gosu::Font.new(25)
+        @button_font = Gosu::Font.new(15)
+        @item_name_font = Gosu::Font.new(14)
+        @info_font = Gosu::Font.new(15)
     end
 
     def get_shortest_path(bad_land)
@@ -244,13 +258,6 @@ class Roamers < (Example rescue Gosu::Window)
 
     def draw_ui
         @ui_offset = 5
-        
-        @group_font = Gosu::Font.new(20)
-        @status_font = Gosu::Font.new(25)
-        @button_font = Gosu::Font.new(15)
-        @item_name_font = Gosu::Font.new(14)
-        @info_font = Gosu::Font.new(15)
-        
         draw_left_menu
         draw_game_info
     end
@@ -318,7 +325,6 @@ class Roamers < (Example rescue Gosu::Window)
             start_at += 25
         end
 
-        @info_font.draw("#{@fortress.money} X ", (SIDE_WIDTH + @fortress.x * TILE_OFFSET + TILE_OFFSET/2), @fortress.y * TILE_OFFSET + TILE_OFFSET + TILE_OFFSET/2,  ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::WHITE)
     end
 
     def draw_button button 
@@ -401,8 +407,8 @@ class Roamers < (Example rescue Gosu::Window)
                     if tile.obstacle_type == Obstacle_type::Tower 
                         start_x = x * TILE_OFFSET + SIDE_WIDTH
                         start_y = y * TILE_OFFSET
-                        draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::BACKGROUND)
-                        tile.draw_indicator if @show_tower_indicator
+                        
+                        # tile.draw_indicator if @show_tower_indicator
                     end
 
                     tile.draw
@@ -473,11 +479,7 @@ class Roamers < (Example rescue Gosu::Window)
         @notification = nil if showing_notification?
         
         return if @game_status == Game_status::Game_over || @game_status == Game_status::Won
-
-        if @fortress.health <= 0
-            @game_status = Game_status::Game_over
-            return 
-        end
+        return if is_game_over?
 
         if @game_status == Game_status::Next_level and !showing_notification?
             if @fortress.level >=3
@@ -503,8 +505,12 @@ class Roamers < (Example rescue Gosu::Window)
             end
 
             # move them
-            @creeps.each { |creep| creep.move @fortress}
-            
+            count = 0
+            @creeps.each do |creep| 
+                creep.move @fortress
+                return if is_game_over?
+            end
+
             # remove the died 
             @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}
             @creeps.reject! {|creep| creep.bury? }
@@ -522,6 +528,14 @@ class Roamers < (Example rescue Gosu::Window)
 
     def showing_notification?
         (Gosu.milliseconds - @notification_end_time) > 0
+    end
+
+    def is_game_over?
+        if @fortress.health <= 0
+            @game_status = Game_status::Game_over
+            true 
+        end
+        false
     end
 
     def needs_cursor? 
@@ -609,6 +623,8 @@ class Roamers < (Example rescue Gosu::Window)
         @game_map = setup_game_map
         @fortress.x = rand(1..@game_map.width - 2)
         @fortress.y = rand(1..@game_map.height - 2)
+        @fortress.health = SETTING["level"][@fortress.level.to_s]["health"]
+        @fortress.money = SETTING["level"][@fortress.level.to_s]["money"]
         
         @infected_lands = Array.new
         create_random_infected_land()
@@ -700,7 +716,15 @@ class Roamers < (Example rescue Gosu::Window)
 
             button_handler
 	    end
-	end
+    end
+    
+    # Sourced from https://gist.github.com/ippa/662583
+    def draw_circle(cx,cy,r, z = 9999,color = Gosu::Color::GREEN, step = 10)
+        0.step(360, step) do |a1|
+        a2 = a1 + step
+        draw_line(cx + Gosu.offset_x(a1, r), cy + Gosu.offset_y(a1, r), color, cx + Gosu.offset_x(a2, r), cy + Gosu.offset_y(a2, r), color, z)
+        end
+    end
 end
 
 window = Roamers.new

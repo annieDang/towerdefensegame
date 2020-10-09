@@ -1,4 +1,4 @@
-require_relative 'setting'
+require_relative '../setting'
 
 def initializeVisitsAndParents width, height
     visited =  Array.new(width) do |x|

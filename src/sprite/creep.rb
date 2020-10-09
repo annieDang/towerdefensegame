@@ -11,6 +11,7 @@ class Creep
         @damage = zombie_setting["damage"]
         @profit = zombie_setting["profit"]
         @health = zombie_setting["health"]
+        @full_health = zombie_setting["health"]
 
         # characteristic
         @size = zombie_setting["size"]
@@ -125,6 +126,7 @@ class Creep
 
     def move fortress
         return if die?
+        return if exploded?
         # if @game_map
         #     return if @game_map.tiles[@grid_x][@grid_y].obstacle_type == Obstacle_type::Tower
         # end
@@ -163,6 +165,8 @@ class Creep
         end
 
         @image_tiles[@current_tile_indx].draw(@x - @size/2, @y - @size/2, ZOrder::PLAYER)
+        $window.draw_rect(@x- @size/2 , @y - @size/2, @size,2, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+        draw_health_bar(@health, @full_health, @x - @size/2, @y - @size/2, @image_tiles[@current_tile_indx].width ,2)
     end
 
     # Removes the creep from its list
