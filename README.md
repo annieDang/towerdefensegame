@@ -15,10 +15,8 @@ Then run the main.rb file:
 # Game idea
 
 Thank you for xithiox
-https://xithiox.github.io/towerdefense/
-https://github.com/xithiox/towerdefense
+https://xithiox.github.io/towerdefense/ Live Demo: https://github.com/xithiox/towerdefense
 
 # Creep asset
 
-https://github.com/lautarodragan/js-sprite-demo
-walking pikachu demo : http://lautarodragan.github.io/js-sprite-demo/index.htm
+https://github.com/lautarodragan/js-sprite-demo Live Demo : http://lautarodragan.github.io/js-sprite-demo/index.htm
