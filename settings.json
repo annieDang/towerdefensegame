@@ -67,6 +67,7 @@
         "profit": 4,
         "price": 100,
         "tower_type": 0,
+        "health": 100,
         "des": "Shoot them with guns",
         "image": "./media/tower/SniperTower1.png"
       },
@@ -78,6 +79,7 @@
         "upgrade_price": 30,
         "price": 110,
         "tower_type": 0,
+        "health": 100,
         "des": "Shoot them with load of guns",
         "image": "./media/tower/SniperTower10.png"
       },
@@ -89,6 +91,7 @@
         "upgrade_price": 30,
         "price": 110,
         "tower_type": 0,
+        "health": 100,
         "des": "Shoot Shoot",
         "image": "./media/tower/SniperTower22.png"
       }
@@ -102,6 +105,7 @@
         "profit": 4,
         "price": 300,
         "tower_type": 0,
+        "health": 300,
         "des": "Like a boom!",
         "image": "./media/tower/Cannon1.png"
       },
@@ -113,6 +117,7 @@
         "upgrade_price": 50,
         "price": 320,
         "tower_type": 0,
+        "health": 300,
         "des": "Kaboom",
         "image": "./media/tower/Cannon10.png"
       },
@@ -136,7 +141,7 @@
         "range": 80,
         "cool_down": 3,
         "profit": 4,
-        "health": 300,
+        "health": 50,
         "price": 500,
         "tower_type": 2,
         "des": "Slow them down!",
@@ -150,6 +155,7 @@
         "upgrade_price": 100,
         "price": 530,
         "tower_type": 2,
+        "health": 50,
         "des": "Make them stiff!",
         "image": "./media/tower/Radar6.png"
       },
@@ -161,6 +167,7 @@
         "upgrade_price": 100,
         "price": 560,
         "tower_type": 2,
+        "health": 50,
         "des": "Stop them!",
         "image": "./media/tower/Radar9.png"
       }

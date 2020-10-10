@@ -22,7 +22,6 @@ class Creep
         @path = path
         @mapping_map = mapping_map
         @moves = @path.dup
-        @game_map = nil
 
         @current_tile_indx = 0
         @current_move = nil
@@ -36,6 +35,7 @@ class Creep
 
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         
+        @last_attack_time = Gosu.milliseconds
     end
 
     def load_tiles(zombie_setting)
@@ -126,12 +126,18 @@ class Creep
         @current_tile_indx = next_tile_img
     end
 
-    def move fortress
+    def move (fortress, game_map)
         return if die?
         return if exploded?
-        # if @game_map
-        #     return if @game_map.tiles[@grid_x][@grid_y].obstacle_type == Obstacle_type::Tower
-        # end
+        
+        if game_map and game_map.tiles[@grid_x][@grid_y].obstacle_type == Obstacle_type::Tower
+            if (Gosu.milliseconds -  @last_attack_time) > 100
+                attack!(game_map, game_map.tiles[@grid_x][@grid_y])
+            end
+            next_tile_img()
+            return
+        end
+
         @x += (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x > @x
         @x -= (@next_tile_x - @x).abs > @speed - 1 ? @speed : 1 if @next_tile_x < @x
         @y += (@next_tile_y - @y).abs > @speed - 1 ? @speed : 1 if @next_tile_y > @y
@@ -147,10 +153,6 @@ class Creep
                 @next_tile_x, @next_tile_y = next_tile(next_move)
             end
         end
-    end
-
-    def update_game_map new_game_map
-        @game_map = new_game_map
     end
 
     def spawn
@@ -170,6 +172,14 @@ class Creep
         $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::BACKGROUND)
         draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2)
     end
+
+    def attack!(game_map, tower)
+        tower.health = tower.health - @damage < 0? 0 : tower.health - @damage
+        if tower.health <= 0
+            game_map.tiles[tower.x][tower.y] = Obstacle.new(Obstacle_type::Empty, tower.x, tower.y)
+            Tower.remove_tower(tower)
+        end
+    end 
 
     # Removes the creep from its list
     def kill!

@@ -136,7 +136,7 @@ class Roamers < (Example rescue Gosu::Window)
         @notification = nil
         @notification_end_time = Gosu.milliseconds
 
-        @collision_time = Gosu.milliseconds
+        @last_move_time = Gosu.milliseconds
 
         create_fonts()
         
@@ -220,9 +220,6 @@ class Roamers < (Example rescue Gosu::Window)
 
         # show tower indicator
         dragging_tower
-
-        # show collision
-        collision
 
         # game status
         draw_status
@@ -438,32 +435,6 @@ class Roamers < (Example rescue Gosu::Window)
         end
     end
 
-    def collision
-        Tower.towers().each do |tower|
-            @creeps.each do |creep|
-                if tower.collision?(creep) and !creep.die?
-                    tower_x = tower.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-                    tower_y = tower.y * TILE_OFFSET + TILE_OFFSET/2
-                    
-                    case tower.tower_type
-                    when Tower_type::Range
-                        # draw_line(tower_x, tower_y, Gosu::Color::RED, creep.x, creep.y, Gosu::Color::RED, ZOrder::PLAYER, mode=:default)
-                        creep.health -= tower.damage
-                        creep.kill! if(creep.health <= 0)
-
-                    when Tower_type::Effect
-                        # draw_line(tower_x, tower_y, Gosu::Color::BLUE, creep.x, creep.y, Gosu::Color::BLUE, ZOrder::PLAYER, mode=:default)
-                        creep.speed = creep.speed - tower.damage  < 1? 1 : creep.speed - tower.damage
-                    end
-                    
-                else
-                    # make it speed normal again
-                    creep.speed = SETTING["zombies"][creep.type.to_s]["speed"]
-                end
-            end
-        end
-    end
-
     def sprawn_creep
         @last_sprawn_time = Gosu.milliseconds
         zombies = @fortress.wave["zombie"]
@@ -506,8 +477,14 @@ class Roamers < (Example rescue Gosu::Window)
                 return
             end
 
+            # attack creeps
+            Tower.attack(@creeps)
+
             # move them
-            @creeps.each { |creep| creep.move @fortress }
+            if Gosu.milliseconds - @last_move_time > 100
+                @creeps.each { |creep| creep.move(@fortress, @game_map) }
+                @last_move_time = Gosu.milliseconds
+            end
 
             # remove the died 
             @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}
@@ -705,7 +682,6 @@ class Roamers < (Example rescue Gosu::Window)
                         if (tower_price < @fortress.money)
                             @game_map.tiles[x][y] = Tower.new(@picked_tower_type, x, y)
                             @fortress.money -= tower_price
-                            @creeps.each { |creep| creep.update_game_map(@game_map) }
                         else
                             make_notification("Not enough money!")
                         end
