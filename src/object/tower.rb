@@ -91,6 +91,8 @@ class Tower < Obstacle
     def collision?(other)
         start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
         start_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        dis = Gosu::distance(start_x, start_y, other.x, other.y)
+        puts "dis :#{dis} , #{other.x}, #{other.y} : #{@x} #{@y}"
         Gosu::distance(start_x, start_y, other.x, other.y) < @range/2
     end
 

@@ -54,10 +54,8 @@ class Creep
     end
 
     def cal_pos
-        width_tile = @image_tiles[@current_tile_indx].width
-        height_tile = @image_tiles[@current_tile_indx].height
-        x = SIDE_WIDTH + @grid_x * TILE_OFFSET +  (TILE_OFFSET/2 - width_tile/2)
-        y = @grid_y * TILE_OFFSET + (TILE_OFFSET/2 - height_tile/2)
+        x = SIDE_WIDTH + @grid_x * TILE_OFFSET +  TILE_OFFSET/2
+        y = @grid_y * TILE_OFFSET + TILE_OFFSET/2
         [x,y]
     end
 
@@ -140,21 +138,26 @@ class Creep
     end
 
     def spawn
+        width_tile = @image_tiles[@current_tile_indx].width
+        height_tile = @image_tiles[@current_tile_indx].height
+        draw_x = @x - width_tile/2
+        draw_y = @y - height_tile/2
+
         if(die? and !bury?)
             tile_indx = (Gosu.milliseconds - @died_time.to_i)/(1000/@blood_image_tiles.length) - 1
             tile_img = @blood_image_tiles[tile_indx]
-            tile_img.draw(@x, @y, ZOrder::PLAYER, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
+            tile_img.draw(draw_x, draw_y, ZOrder::PLAYER, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
             return
         end
         if(exploded? and !exploded_done?)
             ratio = (Gosu.milliseconds - @exploded_time.to_i)/2000.0
-            @exploxed_image.draw(@x, @y, ZOrder::PLAYER, ratio, ratio)
+            @exploxed_image.draw(draw_x, draw_y, ZOrder::PLAYER, ratio, ratio)
             return
         end
 
-        @image_tiles[@current_tile_indx].draw(@x, @y, ZOrder::PLAYER)
-        $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::PLAYER)
-        draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2,ZOrder::PLAYER)
+        @image_tiles[@current_tile_indx].draw(draw_x, draw_y, ZOrder::PLAYER)
+        $window.draw_rect(draw_x , draw_y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::PLAYER)
+        draw_health_bar(@health, @full_health, draw_x, draw_y, @image_tiles[@current_tile_indx].width ,2,ZOrder::PLAYER)
     end
 
     def attack!(game_map, tower)
