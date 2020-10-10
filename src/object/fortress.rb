@@ -7,27 +7,21 @@ class Fortress < Obstacle
         @height = height
         @level = 1
         load_setting 
-        @coin_img = Gosu::Image.new("./media/coin.png")
     end
 
     def draw 
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
-        $window.draw_rect(start_x,start_y,TILE_OFFSET * @width,5, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+        # indicator 
+        $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x + TILE_OFFSET, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x, start_y + TILE_OFFSET, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x + TILE_OFFSET, start_y + TILE_OFFSET, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        # health bar
+        $window.draw_rect(start_x,start_y,TILE_OFFSET * @width,5, Gosu::Color::BLACK, ZOrder::TOWER)
         draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET * @width,5)
-
-        @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * @width * 1.0) /@image.width,  (TILE_OFFSET * @height * 1.0) /@image.height)
-        @coin_img.draw((start_x + TILE_OFFSET + TILE_OFFSET/2), start_y + TILE_OFFSET + TILE_OFFSET/2, ZOrder::BACKGROUND, 5.0/@image.width,  5.0/@image.height)
-        @info_font = Gosu::Font.new(15)
-        @info_font.draw(
-            "#{@money} X ", 
-            (SIDE_WIDTH + @x * TILE_OFFSET + TILE_OFFSET/2),
-            @y * TILE_OFFSET + TILE_OFFSET + TILE_OFFSET/2,  
-            ZOrder::PLAYER, 
-            1.0,
-            1.0,
-            Gosu::Color::WHITE)
-            draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET * @width,5)
+        # building img
+        @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * @width * 1.0) /@image.width,  (TILE_OFFSET * @height * 1.0) /@image.height)
     end
 
     def load_setting

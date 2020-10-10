@@ -63,10 +63,19 @@ class Tower < Obstacle
     def draw
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
-        $window.draw_rect(start_x,start_y,TILE_OFFSET,5, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+        
+        # healthbar
+        $window.draw_rect(start_x, start_y ,TILE_OFFSET,5, Gosu::Color::BLACK, ZOrder::TOWER)
         draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET,5)
-        $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::BACKGROUND)
-        @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+       
+        # indicator
+        $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        draw_circle(start_x + TILE_OFFSET/2 , start_y + TILE_OFFSET/2, @range/2, ZOrder::TOWER)
+       
+        # building image
+        @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+        
+        # attacking
         if !@target.nil? and (Gosu.milliseconds -  @last_bullet) > 50
             draw_bullet()
             @last_bullet = Gosu.milliseconds
@@ -74,9 +83,9 @@ class Tower < Obstacle
     end
 
     def draw_indicator
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH
-        start_y = @y * TILE_OFFSET
-        @circle.draw(start_x + TILE_OFFSET/2- @range/2, start_y + TILE_OFFSET/2 - @range/2, ZOrder::UI,  @range/@circle.width,  @range/@circle.width)
+        start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
+        start_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        draw_circle(start_x, start_y, @range/2)
     end
 
     # Check collision against another sprite
@@ -91,7 +100,7 @@ class Tower < Obstacle
         start_y = @y * TILE_OFFSET + TILE_OFFSET/2
         thickness = 2
         color =  Gosu::Color::RED
-        $window.draw_quad(start_x - thickness/2, start_y, color, start_x + thickness/2, start_y, color, @target.x - thickness/2, @target.y, color, @target.x + thickness/2, @target.y, color)
+        $window.draw_quad(start_x - thickness/2, start_y, color, start_x + thickness/2, start_y, color, @target.x - thickness/2, @target.y, color, @target.x + thickness/2, @target.y, color, ZOrder::TOWER)
     end
 
     def self.attack(creeps)

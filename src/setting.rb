@@ -6,7 +6,7 @@ end
 SETTING = load_settings
 
 module ZOrder
-    BACKGROUND,  UI , PLAYER= *0..2
+    BACKGROUND, OBSTACLE, TOWER, UI , PLAYER , NOTIFICATION = *0..5
 end
 
 module Obstacle_type

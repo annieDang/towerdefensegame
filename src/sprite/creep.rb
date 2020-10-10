@@ -65,22 +65,6 @@ class Creep
         cal_grid(@back_to_last_move, @grid_x, @grid_y)
     end
 
-    def self.cal_grid move, last_x, last_y
-        x = last_x
-        y = last_y
-        case move
-        when Direction::Up
-            y = last_y - 1
-        when Direction::Down
-            y = last_y + 1
-        when Direction::Left
-            x = last_x - 1
-        when Direction::Right
-            x = last_x + 1
-        end
-        [x,y]
-    end
-
     def walking_toward?
         return Direction::Down if (@current_tile_indx >= 0 and @current_tile_indx <= 2)
         return Direction::Up if (@current_tile_indx >= 9 and @current_tile_indx <= 11)
@@ -106,7 +90,7 @@ class Creep
             next_tile_x = @x + TILE_OFFSET
             @current_tile_indx = 6 if (last_move != Direction::Right)
         end
-        @grid_x, @grid_y =  Creep.cal_grid(move, @grid_x, @grid_y)
+        @grid_x, @grid_y =  cal_grid(move, @grid_x, @grid_y)
         @current_move = move
         [next_tile_x, next_tile_y]
     end
@@ -159,7 +143,7 @@ class Creep
         if(die? and !bury?)
             tile_indx = (Gosu.milliseconds - @died_time.to_i)/(1000/@blood_image_tiles.length) - 1
             tile_img = @blood_image_tiles[tile_indx]
-            tile_img.draw(@x, @y, 4, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
+            tile_img.draw(@x, @y, ZOrder::PLAYER, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
             return
         end
         if(exploded? and !exploded_done?)
@@ -169,7 +153,7 @@ class Creep
         end
 
         @image_tiles[@current_tile_indx].draw(@x, @y, ZOrder::PLAYER)
-        $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::BACKGROUND)
+        $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::PLAYER)
         draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2)
     end
 

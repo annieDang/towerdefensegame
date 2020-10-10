@@ -14,6 +14,6 @@ class Obstacle
     def draw 
         start_x = @x * TILE_OFFSET + SIDE_WIDTH
         start_y = @y * TILE_OFFSET
-        @image.draw(start_x, start_y, ZOrder::BACKGROUND, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+        @image.draw(start_x, start_y, ZOrder::OBSTACLE, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
     end
 end
