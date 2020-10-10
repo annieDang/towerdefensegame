@@ -1,5 +1,5 @@
 {
-  "time_per_level": 60,
+  "time_per_level": 100,
   "obstacle": {
     "0": {
       "name": "house",
@@ -138,7 +138,7 @@
       "name": "Effect",
       "level1": {
         "damage": 2,
-        "range": 100,
+        "range": 150,
         "cool_down": 3,
         "profit": 4,
         "health": 50,
@@ -149,7 +149,7 @@
       },
       "level2": {
         "damage": 3,
-        "range": 120,
+        "range": 200,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 500,
@@ -161,7 +161,7 @@
       },
       "level3": {
         "damage": 6,
-        "range": 150,
+        "range": 250,
         "cool_down": 3,
         "profit": 4,
         "upgrade_price": 1000,

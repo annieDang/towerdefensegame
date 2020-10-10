@@ -226,6 +226,8 @@ class Roamers < (Example rescue Gosu::Window)
         # game status
         draw_status
 
+        @picked_tower.draw_indicator() if @picked_tower
+
         #draw_buttons
         Button.buttons.each { |button| draw_button(button) if !button.hidden }
     end
@@ -536,6 +538,7 @@ class Roamers < (Example rescue Gosu::Window)
         @start_game = Gosu.milliseconds
         @time = 0
         @creeps =[]
+        @picked_tower = nil
 
         @fortress.health = SETTING["level"][@fortress.level.to_s]["health"]
         @fortress.money = SETTING["level"][@fortress.level.to_s]["money"]

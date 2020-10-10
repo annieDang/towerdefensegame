@@ -70,7 +70,6 @@ class Tower < Obstacle
        
         # indicator
         $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
-        draw_circle(start_x + TILE_OFFSET/2 , start_y + TILE_OFFSET/2, @range/2, ZOrder::TOWER)
        
         # building image
         @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
@@ -85,7 +84,7 @@ class Tower < Obstacle
     def draw_indicator
         start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
         start_y = @y * TILE_OFFSET + TILE_OFFSET/2
-        draw_circle(start_x, start_y, @range/2)
+        draw_circle(start_x, start_y , @range/2, ZOrder::TOWER)
     end
 
     # Check collision against another sprite
