@@ -154,7 +154,7 @@ class Creep
 
         @image_tiles[@current_tile_indx].draw(@x, @y, ZOrder::PLAYER)
         $window.draw_rect(@x , @y, @image_tiles[@current_tile_indx].width,2, Gosu::Color::BLACK, ZOrder::PLAYER)
-        draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2)
+        draw_health_bar(@health, @full_health, @x, @y, @image_tiles[@current_tile_indx].width ,2,ZOrder::PLAYER)
     end
 
     def attack!(game_map, tower)

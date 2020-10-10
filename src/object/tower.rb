@@ -65,8 +65,8 @@ class Tower < Obstacle
         start_y = @y * TILE_OFFSET
         
         # healthbar
-        $window.draw_rect(start_x, start_y ,TILE_OFFSET,5, Gosu::Color::BLACK, ZOrder::TOWER)
-        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET,5)
+        $window.draw_rect(start_x, start_y ,TILE_OFFSET,5, Gosu::Color::BLACK, ZOrder::UI)
+        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET, 5, ZOrder::UI)
        
         # indicator
         $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
@@ -102,44 +102,44 @@ class Tower < Obstacle
         $window.draw_quad(start_x - thickness/2, start_y, color, start_x + thickness/2, start_y, color, @target.x - thickness/2, @target.y, color, @target.x + thickness/2, @target.y, color, ZOrder::TOWER)
     end
 
-    def self.attack(creeps)
-        @@towers.each do |tower|
-            tower.target = nil
-            return if (Gosu.milliseconds -  tower.last_attack_time) < 100
-            tower_x = tower.x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-            tower_y = tower.y * TILE_OFFSET + TILE_OFFSET/2
+    def is_shooting?(creep)
+        collision?(creep) and !creep.die? and !creep.exploded?
+    end
+    
+    def attack (creeps)
+        @target = nil
+        return if (Gosu.milliseconds -  @last_attack_time) < 100
+        tower_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
+        tower_y = @y * TILE_OFFSET + TILE_OFFSET/2
 
-            creeps_in_tower_range = Array.new
-            creeps.each do |creep|
-                if tower.collision?(creep) and !creep.die? and !creep.exploded?
-                    if tower.tower_type == Tower_type::Effect
-                        # slow pokemon down
-                        creep.speed = creep.speed - tower.damage  < 1? 1 : creep.speed - tower.damage
-                    else
-                        creeps_in_tower_range << creep
-                    end
+        creeps_in_tower_range = Array.new
+        creeps.each do |creep|
+            if is_shooting?(creep)
+                if tower_type == Tower_type::Effect
+                    # slow pokemon down
+                    creep.speed = creep.speed - @damage  < 1? 1 : creep.speed - @damage
                 else
-                    # give pokemon back its normal speed
-                    creep.speed = SETTING["zombies"][creep.type.to_s]["speed"]
+                    creeps_in_tower_range << creep
                 end
+            else
+                # give pokemon back its normal speed
+                creep.speed = SETTING["zombies"][creep.type.to_s]["speed"]
             end
+        end
             
-            if creeps_in_tower_range.length > 0
-                nearest_creep = creeps_in_tower_range[0]
-                if (creeps_in_tower_range.length > 1)
-                    for creep in 1..(creeps_in_tower_range.length - 1)
-                        min_dis = Gosu::distance(tower_x, tower_y, nearest_creep.x, nearest_creep.y)
-                        creep_dis = Gosu::distance(tower_x, tower_y, creeps_in_tower_range[creep].x, creeps_in_tower_range[creep].y)
-                        nearest_creep = creeps_in_tower_range[creep] if min_dis > creep_dis
-                    end
+        if creeps_in_tower_range.length > 0
+            nearest_creep = creeps_in_tower_range[0]
+            if (creeps_in_tower_range.length > 1)
+                for creep in 1..(creeps_in_tower_range.length - 1)
+                    min_dis = Gosu::distance(tower_x, tower_y, nearest_creep.x, nearest_creep.y)
+                    creep_dis = Gosu::distance(tower_x, tower_y, creeps_in_tower_range[creep].x, creeps_in_tower_range[creep].y)
+                    nearest_creep = creeps_in_tower_range[creep] if min_dis > creep_dis
                 end
-
-                nearest_creep.health -= tower.damage
-                nearest_creep.kill! if(nearest_creep.health <= 0)
-
-                tower.target = nearest_creep
-                @last_attack_time = Gosu.milliseconds
             end
+            nearest_creep.health -= @damage
+            nearest_creep.kill! if(nearest_creep.health <= 0)
+            @target = nearest_creep
+            @last_attack_time = Gosu.milliseconds
         end
     end
 

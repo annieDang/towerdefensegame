@@ -22,7 +22,7 @@ https://xithiox.github.io/towerdefense/ Live Demo: https://github.com/xithiox/to
 Thank to lautarodragan
 https://github.com/lautarodragan/js-sprite-demo Live Demo : http://lautarodragan.github.io/js-sprite-demo/index.htm
 
-# Moving object in gosu (fix path)
+# Moving object in gosu (fixed path)
 
 Thank to lucascaton
 https://github.com/lucascaton/alien_invasion

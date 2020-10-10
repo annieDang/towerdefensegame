@@ -19,7 +19,7 @@ class Fortress < Obstacle
         $window.draw_rect(start_x + TILE_OFFSET, start_y + TILE_OFFSET, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
         # health bar
         $window.draw_rect(start_x,start_y,TILE_OFFSET * @width,5, Gosu::Color::BLACK, ZOrder::TOWER)
-        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET * @width,5)
+        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET * @width,5, ZOrder::TOWER)
         # building img
         @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * @width * 1.0) /@image.width,  (TILE_OFFSET * @height * 1.0) /@image.height)
     end

@@ -141,14 +141,17 @@ class Roamers < (Example rescue Gosu::Window)
         @last_move_time = Gosu.milliseconds
 
         create_fonts()
-        
+        create_sounds()
+    end
+
+    def create_sounds
+        @sound = Hash.new
+        @sound["kill"] = Gosu::Song.new("./media/sound/Pika Scream.mp3")
+        @sound["attack"] = Gosu::Song.new("./media/sound/Pikaaaa.mp3")
+        @sound["shooting"] = Gosu::Song.new("./media/sound/shoot.mp3")
     end
 
     def start_game
-        @song = Gosu::Song.new("media/sound/background_normal.mp3") 
-        @song.volume = 0.2
-        @song.play(true)
-
         @game_status = Game_status::Running
 
         @start_game = Gosu.milliseconds
@@ -406,8 +409,8 @@ class Roamers < (Example rescue Gosu::Window)
         bottomY = topY + TILE_OFFSET
         thickness = 4
         color =  Gosu::Color::RED
-        draw_quad(leftX - thickness/2, topY, color, leftX + thickness/2, topY, color, rightX - thickness/2, bottomY, color, rightX + thickness/2, bottomY, color)
-        draw_quad(leftX + TILE_OFFSET - thickness/2, topY, color, leftX + TILE_OFFSET + thickness/2, topY, color, rightX - TILE_OFFSET - thickness/2, bottomY, color, rightX - TILE_OFFSET + thickness/2, bottomY, color)
+        draw_quad(leftX - thickness/2, topY, color, leftX + thickness/2, topY, color, rightX - thickness/2, bottomY, color, rightX + thickness/2, bottomY, color, ZOrder::UI)
+        draw_quad(leftX + TILE_OFFSET - thickness/2, topY, color, leftX + TILE_OFFSET + thickness/2, topY, color, rightX - TILE_OFFSET - thickness/2, bottomY, color, rightX - TILE_OFFSET + thickness/2, bottomY, color,ZOrder::UI)
     end
 
     def draw_game_map
@@ -495,8 +498,25 @@ class Roamers < (Example rescue Gosu::Window)
             end
 
             # attack creeps
-            Tower.attack(@creeps)
+            @shooting = false
+            Tower.towers.each do |tower|
+                @creeps.each do |creep|
+                    if(tower.is_shooting?(creep) and tower.tower_type != Tower_type::Effect)
+                        @shooting = true
+                        break
+                    end
+                end
+                break if @shooting
+            end
 
+            if !@shooting
+                @sound["shooting"].stop if @sound["shooting"].playing?
+            elsif !@sound["shooting"].playing?
+                play_sound("shooting")
+            end
+
+            Tower.towers.each { |tower| tower.attack(@creeps) }
+                  
             # move them
             if Gosu.milliseconds - @last_move_time > 100
                 @creeps.each { |creep| creep.move(@fortress, @game_map) }
@@ -505,17 +525,41 @@ class Roamers < (Example rescue Gosu::Window)
 
             # remove the died 
             @creeps.each { |creep| @fortress.money += creep.profit if creep.bury?}
-            @creeps.reject! {|creep| creep.bury? }
-            @creeps.reject! {|creep| creep.exploded_done? }
+            @creeps.reject! do |creep| 
+                if creep.bury? 
+                    play_sound("kill")
+                    true
+                end
+            end
+            @creeps.reject! do |creep| 
+                if creep.exploded_done?
+                    play_sound("attack")
+                    true
+                end
+            end
 
             # kill the died
-            @creeps.each { |creep| creep.kill! if creep.health <0}
+            @creeps.each {|creep|  creep.kill! if creep.health <0 }
 
             if(@creeps.length < @fortress.number_of_creeps)
                 @creeps << sprawn_creep if(Gosu.milliseconds - (@last_sprawn_time || 0) > 500)
             end
         end
+    end
 
+    def play_sound(name)
+        playing = nil
+        @sound.each do |key, value|
+           if value.playing? 
+                playing = key
+                break
+           end
+        end
+        return if playing and name == "shooting" and playing != name
+        if(playing != name)
+            @sound[name].volume = 0.2
+            @sound[name].play 
+        end
     end
 
     def showing_notification?
