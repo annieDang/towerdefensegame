@@ -1,5 +1,5 @@
 {
-  "time_per_level": 100,
+  "time_per_level": 60,
   "obstacle": {
     "0": {
       "name": "house",
@@ -22,11 +22,11 @@
       "image": "./media/obstacle/Infected_land.png"
     }
   },
-  "zombies": {
+  "creep": {
     "0": {
       "name": "Melee",
       "damage": 5,
-      "speed": 1,
+      "speed": 6,
       "profit": 100,
       "health": 500,
       "size": 10,
@@ -37,7 +37,7 @@
     "1": {
       "name": "Siege",
       "damage": 8,
-      "speed": 2,
+      "speed": 4,
       "profit": 200,
       "health": 1000,
       "size": 12,
@@ -47,8 +47,8 @@
     },
     "2": {
       "name": "Super",
-      "damage": 3,
-      "speed": 4,
+      "damage": 20,
+      "speed": 3,
       "profit": 300,
       "health": 2000,
       "size": 14,
@@ -226,26 +226,26 @@
   "level": {
     "1": {
       "number_of_infected_land": 1,
-      "health": 50,
-      "money": 1000,
+      "health": 30,
+      "money": 2000,
       "wave": "lv1",
       "number_of_creeps": 5,
       "towers": ["0", "1", "2"]
     },
     "2": {
       "number_of_infected_land": 2,
-      "health": 80,
-      "money": 2000,
+      "health": 30,
+      "money": 2500,
       "wave": "lv2",
       "number_of_creeps": 10,
       "towers": ["0", "1", "2"]
     },
     "3": {
       "number_of_infected_land": 3,
-      "health": 150,
+      "health": 30,
       "money": 3000,
       "wave": "lv3",
-      "number_of_creeps": 20,
+      "number_of_creeps": 15,
       "towers": ["0", "1", "2"]
     }
   }

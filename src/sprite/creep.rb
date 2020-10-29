@@ -1,11 +1,13 @@
 class Creep
     attr_accessor :type, :x, :y, :name, :damage, :speed, :profit, :health, :die, :path, :grid_x, :grid_y, :mapping_map, :image_tiles
-    def initialize(type, grid_x, grid_y, path, mapping_map)
+    def initialize(type, grid_x, grid_y, path)
         @type = type;
         @grid_x = grid_x
         @grid_y = grid_y
+        
+        @tile_size = Engine::PlayState::TileSize
         # load the setting
-        zombie_setting =  SETTING["zombies"][type.to_s]
+        zombie_setting =  SETTING["creep"][type.to_s]
         @name = zombie_setting["name"]
         @speed = zombie_setting["speed"]
         @damage = zombie_setting["damage"]
@@ -20,7 +22,6 @@ class Creep
         load_tiles(zombie_setting)
         
         @path = path
-        @mapping_map = mapping_map
         @moves = @path.dup
 
         @current_tile_indx = 0
@@ -32,12 +33,15 @@ class Creep
 
         # characteristic
         @x,@y = cal_pos
+        
 
         @next_tile_x, @next_tile_y = next_tile(@moves.shift)
         
         @last_attack_time = Gosu.milliseconds
+        
     end
 
+    # load image into tiles
     def load_tiles(zombie_setting)
         tiles = Gosu::Image.load_tiles(zombie_setting["image_tile_dir"], 32, 32)
         tile_no = zombie_setting["tile_loc"]
@@ -53,9 +57,11 @@ class Creep
         end 
     end
 
+    # mapping map position to screen position 
     def cal_pos
-        x = SIDE_WIDTH + @grid_x * TILE_OFFSET +  TILE_OFFSET/2
-        y = @grid_y * TILE_OFFSET + TILE_OFFSET/2
+        x, y = map_location(@grid_x, @grid_y)
+        x += @tile_size/2
+        y += @tile_size/2
         [x,y]
     end
 
@@ -63,6 +69,7 @@ class Creep
         cal_grid(@back_to_last_move, @grid_x, @grid_y)
     end
 
+    # which direction the creep moving toward
     def walking_toward?
         return Direction::Down if (@current_tile_indx >= 0 and @current_tile_indx <= 2)
         return Direction::Up if (@current_tile_indx >= 9 and @current_tile_indx <= 11)
@@ -76,16 +83,16 @@ class Creep
         last_move = walking_toward?
         case move
         when Direction::Up
-            next_tile_y = @y - TILE_OFFSET
+            next_tile_y = @y - @tile_size
             @current_tile_indx = 9 if (last_move != Direction::Up)
         when Direction::Down
-            next_tile_y = @y + TILE_OFFSET
+            next_tile_y = @y + @tile_size
             @current_tile_indx = 0 if (last_move != Direction::Down)
         when Direction::Left
-            next_tile_x = @x - TILE_OFFSET
+            next_tile_x = @x - @tile_size
             @current_tile_indx = 3 if (last_move != Direction::Left)
         when Direction::Right
-            next_tile_x = @x + TILE_OFFSET
+            next_tile_x = @x + @tile_size
             @current_tile_indx = 6 if (last_move != Direction::Right)
         end
         @grid_x, @grid_y =  cal_grid(move, @grid_x, @grid_y)
@@ -93,6 +100,7 @@ class Creep
         [next_tile_x, next_tile_y]
     end
 
+    # find the image of tiles is gonna be drawn
     def next_tile_img
         next_tile_img = @current_tile_indx + 1
         case @current_move
@@ -108,6 +116,7 @@ class Creep
         @current_tile_indx = next_tile_img
     end
 
+    # calculate next move and status of the creep
     def move (fortress, game_map)
         return if die?
         return if exploded?
@@ -137,18 +146,22 @@ class Creep
         end
     end
 
+    # draw the image
     def spawn
         width_tile = @image_tiles[@current_tile_indx].width
         height_tile = @image_tiles[@current_tile_indx].height
         draw_x = @x - width_tile/2
         draw_y = @y - height_tile/2
 
+        return if bury? || exploded_done?
+
         if(die? and !bury?)
             tile_indx = (Gosu.milliseconds - @died_time.to_i)/(1000/@blood_image_tiles.length) - 1
-            tile_img = @blood_image_tiles[tile_indx]
-            tile_img.draw(draw_x, draw_y, ZOrder::PLAYER, (TILE_OFFSET * 1.0)/tile_img.width, (TILE_OFFSET * 1.0)/tile_img.height)
+            blood_img = @blood_image_tiles[tile_indx]
+            blood_img.draw(draw_x, draw_y, ZOrder::PLAYER, (@tile_size * 1.0)/blood_img.width, (@tile_size * 1.0)/blood_img.height)
             return
         end
+
         if(exploded? and !exploded_done?)
             ratio = (Gosu.milliseconds - @exploded_time.to_i)/2000.0
             @exploxed_image.draw(draw_x, draw_y, ZOrder::PLAYER, ratio, ratio)
@@ -179,14 +192,17 @@ class Creep
         @die
     end
 
+    # or bleeding?
     def bury?
         die? and (Gosu.milliseconds - @died_time > 500)
     end
 
+    # or exploding?
     def explode!
         @exploded = true
         @exploded_time = Gosu.milliseconds if !@exploded_time
     end
+    
     # Checks whether this sprite should be deleted
     def exploded?
         @exploded

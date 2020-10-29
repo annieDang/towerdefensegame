@@ -13,3 +13,9 @@ def cal_grid move, last_x, last_y
     end
     [x,y]
 end
+
+def map_location (x, y)
+    loc_x = x * Engine::PlayState::TileSize + Engine::PlayState::LeftMenuWidth
+    loc_y = y * Engine::PlayState::TileSize
+    [loc_x, loc_y]
+end

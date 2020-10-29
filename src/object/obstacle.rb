@@ -1,5 +1,5 @@
 class Obstacle
-    attr_accessor :obstacle_type, :x, :y, :image, :name
+    attr_accessor :obstacle_type, :size, :x, :y, :image, :name
     def initialize(obstacle_type, x, y)
         @obstacle_type = obstacle_type
         @x = x
@@ -12,8 +12,8 @@ class Obstacle
     end
 
     def draw 
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH
-        start_y = @y * TILE_OFFSET
-        @image.draw(start_x, start_y, ZOrder::OBSTACLE, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+        loc_x, loc_y = map_location(@x, @y)
+        size = Engine::PlayState::TileSize
+        @image.draw(loc_x, loc_y, ZOrder::OBSTACLE, (size * 1.0) /@image.width,  (size * 1.0) /@image.height)
     end
 end

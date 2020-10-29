@@ -5,9 +5,6 @@ end
 
 SETTING = load_settings
 
-module ZOrder
-    BACKGROUND, OBSTACLE, TOWER, UI , PLAYER , NOTIFICATION = *0..5
-end
 
 module Obstacle_type
     Mountain = 0
@@ -15,7 +12,7 @@ module Obstacle_type
     House = 2
     Tower = 3
     HQ = 4
-    Infected_forest = 5
+    Entrance = 5
     Empty = 6
 end
 

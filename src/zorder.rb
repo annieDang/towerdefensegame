@@ -1,0 +1,3 @@
+module ZOrder
+    BACKGROUND, OBSTACLE, TOWER, UI , PLAYER , NOTIFICATION, FADE = *0..6
+end

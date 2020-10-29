@@ -4,7 +4,7 @@ class Tower < Obstacle
     def initialize(type, x, y)
         super(Obstacle_type::Tower, x, y)
 
-        @type = type;
+        @type = type
         @status = Tower_status::Building
         @level = 1
         
@@ -15,6 +15,8 @@ class Tower < Obstacle
 
         @last_attack_time = Gosu.milliseconds
         @last_bullet = Gosu.milliseconds
+        
+        @tile_size = Engine::PlayState::TileSize
 
         # put tower in shared list
         @@towers << self
@@ -61,18 +63,16 @@ class Tower < Obstacle
     end
 
     def draw
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH
-        start_y = @y * TILE_OFFSET
-        
+        start_x, start_y = map_location(@x, @y)
         # healthbar
-        $window.draw_rect(start_x, start_y ,TILE_OFFSET,5, Gosu::Color::BLACK, ZOrder::UI)
-        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET, 5, ZOrder::UI)
+        $window.draw_rect(start_x, start_y , @tile_size ,5, Gosu::Color::BLACK, ZOrder::UI)
+        draw_health_bar(@health, @full_health, start_x, start_y, @tile_size, 5, ZOrder::UI)
        
         # indicator
-        $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x, start_y, @tile_size, @tile_size, Gosu::Color.new(139,69,19), ZOrder::TOWER)
        
         # building image
-        @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * 1.0) /@image.width,  (TILE_OFFSET * 1.0) /@image.height)
+        @image.draw(start_x, start_y, ZOrder::TOWER, (@tile_size * 1.0) /@image.width,  (@tile_size * 1.0) /@image.height)
         
         # attacking
         if !@target.nil? and (Gosu.milliseconds -  @last_bullet) > 50
@@ -82,23 +82,25 @@ class Tower < Obstacle
     end
 
     def draw_indicator
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-        start_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        start_x, start_y = map_location(@x, @y)
+        start_x += @tile_size/2 
+        start_y += @tile_size/2 
         draw_circle(start_x, start_y , @range/2, ZOrder::TOWER)
     end
 
     # Check collision against another sprite
     def collision?(other)
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-        start_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        start_x, start_y = map_location(@x, @y)
+        start_x += @tile_size/2
+        start_y += @tile_size/2
         dis = Gosu::distance(start_x, start_y, other.x, other.y)
-        puts "dis :#{dis} , #{other.x}, #{other.y} : #{@x} #{@y}"
         Gosu::distance(start_x, start_y, other.x, other.y) < @range/2
     end
 
     def draw_bullet
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-        start_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        start_x, start_y = map_location(@x, @y)
+        start_x += @tile_size/2
+        start_y += @tile_size/2
         thickness = 2
         color =  Gosu::Color::RED
         $window.draw_quad(start_x - thickness/2, start_y, color, start_x + thickness/2, start_y, color, @target.x - thickness/2, @target.y, color, @target.x + thickness/2, @target.y, color, ZOrder::TOWER)
@@ -111,8 +113,9 @@ class Tower < Obstacle
     def attack (creeps)
         @target = nil
         return if (Gosu.milliseconds -  @last_attack_time) < 100
-        tower_x = @x * TILE_OFFSET + SIDE_WIDTH + TILE_OFFSET/2
-        tower_y = @y * TILE_OFFSET + TILE_OFFSET/2
+        tower_x, tower_y = map_location(@x, @y)
+        tower_x += @tile_size/2
+        tower_y += @tile_size/2
 
         creeps_in_tower_range = Array.new
         creeps.each do |creep|
@@ -125,7 +128,7 @@ class Tower < Obstacle
                 end
             else
                 # give pokemon back its normal speed
-                creep.speed = SETTING["zombies"][creep.type.to_s]["speed"]
+                creep.speed = SETTING["creep"][creep.type.to_s]["speed"]
             end
         end
             

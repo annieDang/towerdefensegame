@@ -1,8 +1,7 @@
 class Fortress < Obstacle
-    attr_accessor :name, :x, :y, :image, :money, :wave, :height, :width, :level, :health, :number_of_creeps, :number_of_infected_land
-    def initialize(name, x, y, type, width, height)
+    attr_accessor :x, :y, :image, :money, :wave, :height, :width, :level, :health, :number_of_creeps, :number_of_infected_land
+    def initialize(x, y, width, height)
         super(Obstacle_type::HQ, x, y)
-        @name = name
         @width = width
         @height = height
         @level = 1
@@ -10,18 +9,18 @@ class Fortress < Obstacle
     end
 
     def draw 
-        start_x = @x * TILE_OFFSET + SIDE_WIDTH
-        start_y = @y * TILE_OFFSET
+        start_x, start_y = map_location(@x, @y)
+        tile_size = Engine::PlayState::TileSize
         # indicator 
-        $window.draw_rect(start_x, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
-        $window.draw_rect(start_x + TILE_OFFSET, start_y, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
-        $window.draw_rect(start_x, start_y + TILE_OFFSET, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
-        $window.draw_rect(start_x + TILE_OFFSET, start_y + TILE_OFFSET, TILE_OFFSET, TILE_OFFSET, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x, start_y, tile_size, tile_size, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x + tile_size, start_y, tile_size, tile_size, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x, start_y + tile_size, tile_size, tile_size, Gosu::Color.new(139,69,19), ZOrder::TOWER)
+        $window.draw_rect(start_x + tile_size, start_y + tile_size, tile_size, tile_size, Gosu::Color.new(139,69,19), ZOrder::TOWER)
         # health bar
-        $window.draw_rect(start_x,start_y,TILE_OFFSET * @width,5, Gosu::Color::BLACK, ZOrder::TOWER)
-        draw_health_bar(@health, @full_health, start_x, start_y, TILE_OFFSET * @width,5, ZOrder::TOWER)
+        $window.draw_rect(start_x,start_y,tile_size * @width,5, Gosu::Color::BLACK, ZOrder::TOWER)
+        draw_health_bar(@health, @full_health, start_x, start_y, tile_size * @width,5, ZOrder::TOWER)
         # building img
-        @image.draw(start_x, start_y, ZOrder::TOWER, (TILE_OFFSET * @width * 1.0) /@image.width,  (TILE_OFFSET * @height * 1.0) /@image.height)
+        @image.draw(start_x, start_y, ZOrder::TOWER, (tile_size * @width * 1.0) /@image.width,  (tile_size * @height * 1.0) /@image.height)
     end
 
     def load_setting

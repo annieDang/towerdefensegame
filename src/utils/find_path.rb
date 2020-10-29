@@ -103,7 +103,7 @@ def generate_mapping game_map, enter, destination
 end
 
 def shortest_path enter, destination
-    mapping_map = generate_mapping(@game_map, enter, destination)
+    mapping_map = generate_mapping(@gamemap, enter, destination)
 
     return nil if !mapping_map
 
