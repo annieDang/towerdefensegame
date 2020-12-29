@@ -8,23 +8,28 @@ You'll need the gosu gem:
 Then run the main file:
 \$ruby start.rb
 
+# Setting
+
+All game assets and setting can be modified at settings.json
+I haven't done a good job at game balancing, hopefully you can help me with it :)
+
 # UI
 
 ![UI](version_imgs/V.0.0.5.png)
 
 # Game play idea
 
-Great thank for xithiox
-https://xithiox.github.io/towerdefense/ Live Demo: https://github.com/xithiox/towerdefense
+Great thank to xithiox
+https://github.com/xithiox/towerdefense
 
 # Creep asset
 
-Thank to lautarodragan
+Million thanks to lautarodragan
 https://github.com/lautarodragan/js-sprite-demo Live Demo : http://lautarodragan.github.io/js-sprite-demo/index.htm
 
 # Moving object in gosu (fixed path)
 
-Thank to lucascaton
+Zillion thanks to lucascaton
 https://github.com/lucascaton/alien_invasion
 
 # Tower and terrain asset
