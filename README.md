@@ -1,4 +1,4 @@
-Simple tower defence game that uses the Gosu library to create a game with Ruby.
+Simple tower defence game that uses the Gosu Ruby library.
 
 # Running
 

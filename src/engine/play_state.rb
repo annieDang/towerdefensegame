@@ -207,7 +207,7 @@ module Engine
       end
       return if playing and name == "shooting" and playing != name
       if(playing != name)
-          @sound[name].volume = 0.2
+          @sound[name].volume = 0
           @sound[name].play 
       end
     end
@@ -463,9 +463,9 @@ module Engine
       end
 
       # handle button event
-      Button.buttons.each do |button|
+      @buttons.each do |button|
           next if button.hidden?
-          next if !Game.area_clicked(button.x, button.y, button.x + button.width, button.y + button.height)
+          next if !button.isHovered?
           case button.id
           when "start"
             start_pause
@@ -515,6 +515,7 @@ module Engine
       if(tower.obstacle_type == Obstacle_type::Tower)
           tower.upgrade
           @fortress.money -= @picked_tower.get_upgrade_price 
+          @fortress.money  = 0 if @fortress.money<0
       end
     end
 

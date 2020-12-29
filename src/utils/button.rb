@@ -1,6 +1,4 @@
 class Button
-    @@buttons = []
-    @@draw_fun = nil
     attr_accessor :x, :y, :width, :height, :label, :font_size, :id, :hidden, :left_align, :color, :mouse_over_color
     def initialize(x, y, width, height, label, id, font_size = 15)
         @x = x
@@ -12,7 +10,6 @@ class Button
         @font_size = font_size
 
         @hidden = false
-        @@buttons << self
     end
 
     def set_left_align
@@ -24,10 +21,6 @@ class Button
     end
     def hidden?
         @hidden
-    end
-
-    def self.buttons
-        @@buttons
     end
 
     def isHovered?
