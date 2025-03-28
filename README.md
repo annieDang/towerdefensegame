@@ -1,37 +1,62 @@
-Simple tower defence game that uses the Gosu Ruby library.
+# Simple Tower Defense Game
 
-# Running
+A simple tower defense game built using the **Gosu** Ruby library.
 
-You'll need the gosu gem:
-\$ gem install gosu
+---
 
-Then run the main file:
-\$ruby start.rb
+## 🚀 Running the Game
 
-# Setting
+Make sure you have the `gosu` gem installed:
 
-All game assets and setting can be modified at settings.json
-I haven't done a good job at game balancing, hopefully you can help me with it :)
+```bash
+gem install gosu
+```
 
-# UI
+Then run the game:
+
+```bash
+ruby start.rb
+```
+
+---
+
+## ⚙️ Settings
+
+All game assets and settings can be modified in `settings.json`.
+
+> I haven’t spent much time balancing the gameplay—feel free to tweak and improve it!
+
+---
+
+## 🖼️ UI Preview
 
 ![UI](version_imgs/V.0.0.5.png)
 
-# Game play idea
+---
 
-Great thank to xithiox
+## 💡 Gameplay Inspiration
+
+Special thanks to **xithiox**  
 https://github.com/xithiox/towerdefense
 
-# Creep asset
+---
 
-Million thanks to lautarodragan
-https://github.com/lautarodragan/js-sprite-demo Live Demo : http://lautarodragan.github.io/js-sprite-demo/index.htm
+## 👾 Creep Assets
 
-# Moving object in gosu (fixed path)
+Huge thanks to **lautarodragan**  
+https://github.com/lautarodragan/js-sprite-demo  
+Live Demo: http://lautarodragan.github.io/js-sprite-demo/index.htm
 
-Zillion thanks to lucascaton
+---
+
+## 🔄 Moving Objects in Gosu (Fixed Path)
+
+Massive thanks to **lucascaton**  
 https://github.com/lucascaton/alien_invasion
 
-# Tower and terrain asset
+---
 
+## 🏰 Tower & Terrain Assets
+
+Based on:  
 https://boombeach.fandom.com/wiki
